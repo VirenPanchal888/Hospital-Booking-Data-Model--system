@@ -9,6 +9,7 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import AppointmentList from '@/components/dashboard/AppointmentList';
 import RecentPatients from '@/components/dashboard/RecentPatients';
 import ActivityChart from '@/components/dashboard/ActivityChart';
+import { AppointmentStatus, UserRole } from '@/components/dashboard/AppointmentList';
 
 // Types
 interface Appointment {
@@ -16,7 +17,7 @@ interface Appointment {
   patientName: string;
   date: string;
   time: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: AppointmentStatus;
   type: string;
 }
 
@@ -26,8 +27,8 @@ const Dashboard: React.FC = () => {
   const isDoctor = user?.role === 'doctor';
   const isPatient = user?.role === 'patient';
   
-  // Note: Converting the readonly array to a mutable array with Array.from()
-  const [appointments, setAppointments] = useState<Appointment[]>(Array.from([
+  // Initialize appointments state
+  const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: '1',
       patientName: 'Olivia Wilson',
@@ -68,34 +69,89 @@ const Dashboard: React.FC = () => {
       status: 'scheduled',
       type: 'Follow-up'
     }
-  ]));
+  ]);
   
-  const handleStatusChange = (id: string, newStatus: 'scheduled' | 'completed' | 'cancelled') => {
+  const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
     setAppointments(appointments.map(appointment => 
       appointment.id === id ? { ...appointment, status: newStatus } : appointment
     ));
   };
   
+  // Sample activity data
+  const activityData = [
+    { name: 'Mon', value: 12 },
+    { name: 'Tue', value: 18 },
+    { name: 'Wed', value: 15 },
+    { name: 'Thu', value: 25 },
+    { name: 'Fri', value: 22 },
+    { name: 'Sat', value: 14 },
+    { name: 'Sun', value: 10 },
+  ];
+  
+  // Sample patients data for RecentPatients component
+  const patients = [
+    {
+      id: '1',
+      name: 'Emma Wilson',
+      age: 34,
+      gender: 'female',
+      condition: 'Hypertension',
+      lastVisit: '2 days ago'
+    },
+    {
+      id: '2',
+      name: 'James Rodriguez',
+      age: 28,
+      gender: 'male',
+      condition: 'Diabetes Type 2',
+      lastVisit: '1 week ago'
+    },
+    {
+      id: '3',
+      name: 'Olivia Smith',
+      age: 45,
+      gender: 'female',
+      condition: 'Arthritis',
+      lastVisit: '3 days ago'
+    },
+    {
+      id: '4',
+      name: 'Noah Johnson',
+      age: 52,
+      gender: 'male',
+      condition: 'COPD',
+      lastVisit: 'Yesterday'
+    },
+    {
+      id: '5',
+      name: 'Ava Brown',
+      age: 19,
+      gender: 'female',
+      condition: 'Asthma',
+      lastVisit: '5 days ago'
+    }
+  ];
+  
   // Stats for different user roles
   const doctorStats = [
-    { title: 'Total Patients', value: '248', change: '+12%', icon: 'users' },
-    { title: 'Appointments Today', value: '8', change: '+2', icon: 'calendar' },
-    { title: 'Avg. Appointment Time', value: '24m', change: '-2m', icon: 'clock' },
-    { title: 'Satisfaction Rate', value: '94%', change: '+1%', icon: 'thumbs-up' },
+    { title: 'Total Patients', value: '248', change: '+12%', icon: 'Users' },
+    { title: 'Appointments Today', value: '8', change: '+2', icon: 'Calendar' },
+    { title: 'Avg. Appointment Time', value: '24m', change: '-2m', icon: 'Clock' },
+    { title: 'Satisfaction Rate', value: '94%', change: '+1%', icon: 'ThumbsUp' },
   ];
   
   const patientStats = [
-    { title: 'Upcoming Appointments', value: '2', change: '', icon: 'calendar' },
-    { title: 'Test Results Pending', value: '3', change: '', icon: 'file-text' },
-    { title: 'Medications', value: '5', change: '+1', icon: 'pill' },
-    { title: 'Next Check-up', value: '12d', change: '', icon: 'calendar-clock' },
+    { title: 'Upcoming Appointments', value: '2', change: '', icon: 'Calendar' },
+    { title: 'Test Results Pending', value: '3', change: '', icon: 'FileText' },
+    { title: 'Medications', value: '5', change: '+1', icon: 'Pill' },
+    { title: 'Next Check-up', value: '12d', change: '', icon: 'CalendarClock' },
   ];
   
   const adminStats = [
-    { title: 'Total Patients', value: '1,248', change: '+8%', icon: 'users' },
-    { title: 'Total Staff', value: '32', change: '+2', icon: 'user-cog' },
-    { title: 'Today\'s Appointments', value: '42', change: '+5', icon: 'calendar' },
-    { title: 'Revenue This Month', value: '$86K', change: '+12%', icon: 'dollar-sign' },
+    { title: 'Total Patients', value: '1,248', change: '+8%', icon: 'Users' },
+    { title: 'Total Staff', value: '32', change: '+2', icon: 'UserCog' },
+    { title: 'Today\'s Appointments', value: '42', change: '+5', icon: 'Calendar' },
+    { title: 'Revenue This Month', value: '$86K', change: '+12%', icon: 'DollarSign' },
   ];
   
   // Show stats based on user role
@@ -163,7 +219,7 @@ const Dashboard: React.FC = () => {
               <CardDescription>Your activity over the past 30 days</CardDescription>
             </CardHeader>
             <CardContent>
-              <ActivityChart />
+              <ActivityChart data={activityData} />
             </CardContent>
           </Card>
         </div>
@@ -183,7 +239,7 @@ const Dashboard: React.FC = () => {
                   <CardDescription>Latest patient activities</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <RecentPatients />
+                  <RecentPatients patients={patients} />
                 </CardContent>
               </Card>
             </TabsContent>

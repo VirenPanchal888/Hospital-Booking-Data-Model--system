@@ -10,21 +10,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'no-show';
+export type UserRole = 'patient' | 'doctor' | 'admin' | undefined;
+
 interface Appointment {
   id: string;
   patientName: string;
   date: string;
   time: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
+  status: AppointmentStatus;
   type: string;
 }
 
 interface AppointmentListProps {
   appointments: Appointment[];
   title?: string;
+  userRole?: UserRole;
+  onStatusChange?: (id: string, newStatus: AppointmentStatus) => void;
 }
 
-const getStatusBadge = (status: Appointment['status']) => {
+const getStatusBadge = (status: AppointmentStatus) => {
   switch (status) {
     case 'scheduled':
       return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Scheduled</Badge>;
@@ -41,8 +46,16 @@ const getStatusBadge = (status: Appointment['status']) => {
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ 
   appointments,
-  title = "Today's Appointments"
+  title = "Today's Appointments",
+  userRole,
+  onStatusChange
 }) => {
+  const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
+    if (onStatusChange) {
+      onStatusChange(id, newStatus);
+    }
+  };
+
   return (
     <div className="rounded-xl border bg-card shadow-sm">
       <div className="flex items-center justify-between border-b p-4">
@@ -94,7 +107,24 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>View Details</DropdownMenuItem>
                     <DropdownMenuItem>Edit Appointment</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
+                    {userRole === 'doctor' && appointment.status === 'scheduled' && (
+                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'completed')}>
+                        Mark as Completed
+                      </DropdownMenuItem>
+                    )}
+                    {userRole === 'doctor' && appointment.status === 'scheduled' && (
+                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'no-show')}>
+                        Mark as No-Show
+                      </DropdownMenuItem>
+                    )}
+                    {appointment.status === 'scheduled' && (
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                      >
+                        Cancel
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

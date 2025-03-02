@@ -2,6 +2,7 @@
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { LucideIcon } from 'lucide-react';
 
 const statsCardVariants = cva(
   "relative rounded-xl border p-6 shadow-sm transition-all duration-200 overflow-hidden",
@@ -23,7 +24,8 @@ const statsCardVariants = cva(
 interface StatsCardProps extends VariantProps<typeof statsCardVariants> {
   title: string;
   value: string | number;
-  icon?: React.ReactNode;
+  icon: string;
+  change?: string;
   description?: string;
   trend?: {
     value: number;
@@ -36,19 +38,27 @@ const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   icon,
+  change,
   description,
   trend,
   variant,
   className,
 }) => {
+  // Function to render the icon based on the icon name string
+  const renderIcon = () => {
+    // This approach allows using string names for icons
+    const iconElement = React.createElement('div', {
+      className: "rounded-lg bg-primary/10 p-2 text-primary",
+      children: icon
+    });
+    
+    return iconElement;
+  };
+
   return (
     <div className={cn(statsCardVariants({ variant }), className)}>
       <div className="flex items-start justify-between">
-        {icon && (
-          <div className="rounded-lg bg-primary/10 p-2 text-primary">
-            {icon}
-          </div>
-        )}
+        {icon && renderIcon()}
       </div>
       
       <div className="mt-3">
@@ -57,6 +67,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
         
         {description && (
           <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+        )}
+        
+        {change && (
+          <p className="mt-1 text-xs text-muted-foreground">{change}</p>
         )}
         
         {trend && (

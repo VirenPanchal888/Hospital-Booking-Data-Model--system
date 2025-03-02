@@ -23,7 +23,51 @@ interface RecentPatientsProps {
   patients: Patient[];
 }
 
-const RecentPatients: React.FC<RecentPatientsProps> = ({ patients }) => {
+// Sample patients data
+const samplePatients: Patient[] = [
+  {
+    id: '1',
+    name: 'Emma Wilson',
+    age: 34,
+    gender: 'female',
+    condition: 'Hypertension',
+    lastVisit: '2 days ago'
+  },
+  {
+    id: '2',
+    name: 'James Rodriguez',
+    age: 28,
+    gender: 'male',
+    condition: 'Diabetes Type 2',
+    lastVisit: '1 week ago'
+  },
+  {
+    id: '3',
+    name: 'Olivia Smith',
+    age: 45,
+    gender: 'female',
+    condition: 'Arthritis',
+    lastVisit: '3 days ago'
+  },
+  {
+    id: '4',
+    name: 'Noah Johnson',
+    age: 52,
+    gender: 'male',
+    condition: 'COPD',
+    lastVisit: 'Yesterday'
+  },
+  {
+    id: '5',
+    name: 'Ava Brown',
+    age: 19,
+    gender: 'female',
+    condition: 'Asthma',
+    lastVisit: '5 days ago'
+  }
+];
+
+const RecentPatients: React.FC<RecentPatientsProps> = ({ patients = samplePatients }) => {
   return (
     <div className="rounded-xl border bg-card shadow-sm">
       <div className="flex items-center justify-between border-b p-4">
@@ -56,7 +100,7 @@ const RecentPatients: React.FC<RecentPatientsProps> = ({ patients }) => {
                           className="h-full w-full rounded-full object-cover"
                         />
                       ) : (
-                        patient.name.charAt(0) + patient.name.split(' ')[1]?.charAt(0)
+                        patient.name.charAt(0) + (patient.name.split(' ')[1]?.charAt(0) || '')
                       )}
                     </div>
                     <span className="font-medium">{patient.name}</span>
