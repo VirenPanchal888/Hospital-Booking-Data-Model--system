@@ -53,8 +53,9 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
   showLegend = false,
   legendNames = defaultLegendNames,
 }) => {
-  const hasSecondaryData = data.some(item => item.value2 !== undefined);
-  const hasTertiaryData = data.some(item => item.value3 !== undefined);
+  // Type-safe check for secondary and tertiary data values
+  const hasSecondaryData = data.some(item => 'value2' in item && item.value2 !== undefined);
+  const hasTertiaryData = data.some(item => 'value3' in item && item.value3 !== undefined);
 
   return (
     <div className="w-full h-[300px]">
