@@ -7,55 +7,77 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
+import Doctors from "./pages/Doctors";
+import Appointments from "./pages/Appointments";
+import NewAppointment from "./pages/NewAppointment";
+import Billing from "./pages/Billing";
+import MedicalRecords from "./pages/MedicalRecords";
+import Pharmacy from "./pages/Pharmacy";
+import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
-// Simple mock authentication
-const isAuthenticated = () => {
-  // This would normally check localStorage, cookies or an auth context
-  return true; // For demo purposes, always return true
-};
-
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isAuthenticated()) {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
 };
 
+const AppRoutes = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Auth routes */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Protected routes */}
+        <Route 
+          path="/" 
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="patients" element={<Patients />} />
+          <Route path="doctors" element={<Doctors />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="new-appointment" element={<NewAppointment />} />
+          <Route path="billing" element={<Billing />} />
+          <Route path="medical-records" element={<MedicalRecords />} />
+          <Route path="pharmacy" element={<Pharmacy />} />
+          <Route path="analytics" element={<Analytics />} />
+        </Route>
+        
+        {/* Catch-all route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Auth routes */}
-          <Route path="/login" element={<Login />} />
-          
-          {/* Protected routes */}
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="patients" element={<Patients />} />
-            {/* Add other protected routes here */}
-          </Route>
-          
-          {/* Catch-all route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AppRoutes />
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

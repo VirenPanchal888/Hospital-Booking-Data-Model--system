@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user } = useAuth();
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
@@ -14,7 +16,7 @@ const Layout: React.FC = () => {
       <Header toggleSidebar={toggleSidebar} />
       
       <div className="flex flex-1">
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar isOpen={sidebarOpen} userRole={user?.role} />
         
         <main className="flex-1 md:ml-64">
           <div className="container mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">

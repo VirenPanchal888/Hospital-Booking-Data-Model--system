@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,16 +12,33 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
 import { EyeIcon, EyeOffIcon, LockKeyholeIcon } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // If already logged in, redirect to home
+  React.useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,9 +54,10 @@ const Login = () => {
     
     setIsLoading(true);
     
-    // Demo login - in a real app, this would be an API call
-    setTimeout(() => {
-      if (email === 'admin@hospital.com' && password === 'password') {
+    try {
+      const success = await login(email, password, role);
+      
+      if (success) {
         toast({
           title: "Success",
           description: "Logged in successfully",
@@ -52,8 +70,15 @@ const Login = () => {
           variant: "destructive",
         });
       }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during login",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   return (
@@ -79,6 +104,22 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
+                <Label htmlFor="role">Login as</Label>
+                <Select
+                  value={role}
+                  onValueChange={(value) => setRole(value as 'patient' | 'doctor' | 'admin')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="patient">Patient</SelectItem>
+                    <SelectItem value="doctor">Doctor</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -92,12 +133,19 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link 
-                    to="/forgot-password" 
+                  <a 
+                    href="#" 
                     className="text-xs text-primary hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast({
+                        title: "Password Reset",
+                        description: "This feature is not implemented in the demo.",
+                      });
+                    }}
                   >
                     Forgot password?
-                  </Link>
+                  </a>
                 </div>
                 <div className="relative">
                   <Input
@@ -139,17 +187,11 @@ const Login = () => {
           </form>
         </Card>
         
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary hover:underline">
-            Register
-          </Link>
-        </div>
-        
         <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>Demo Credentials:</p>
-          <p>Email: admin@hospital.com</p>
-          <p>Password: password</p>
+          <p>Role: Patient | Email: patient@hospital.com | Password: password</p>
+          <p>Role: Doctor | Email: doctor@hospital.com | Password: password</p>
+          <p>Role: Admin | Email: admin@hospital.com | Password: password</p>
         </div>
       </div>
     </div>

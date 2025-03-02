@@ -1,57 +1,79 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Activity,
   Calendar,
   ClipboardList,
   Home,
+  LogOut,
   Pill,
+  Plus,
   Settings,
+  User,
   UserRound,
   Users,
   Wallet
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SidebarProps {
   isOpen: boolean;
+  userRole?: 'patient' | 'doctor' | 'admin';
 }
 
 interface NavItem {
   title: string;
   href: string;
   icon: React.ReactNode;
+  roles: Array<'patient' | 'doctor' | 'admin'>;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+  const { toast } = useToast();
   
   const mainNavItems: NavItem[] = [
     {
       title: "Dashboard",
       href: "/",
       icon: <Home className="h-5 w-5" />,
+      roles: ['patient', 'doctor', 'admin'],
     },
     {
       title: "Patients",
       href: "/patients",
       icon: <Users className="h-5 w-5" />,
+      roles: ['doctor', 'admin'],
     },
     {
       title: "Doctors",
       href: "/doctors",
       icon: <UserRound className="h-5 w-5" />,
+      roles: ['patient', 'admin'],
     },
     {
       title: "Appointments",
       href: "/appointments",
       icon: <Calendar className="h-5 w-5" />,
+      roles: ['patient', 'doctor', 'admin'],
+    },
+    {
+      title: "New Appointment",
+      href: "/new-appointment",
+      icon: <Plus className="h-5 w-5" />,
+      roles: ['patient'],
     },
     {
       title: "Billing",
       href: "/billing",
       icon: <Wallet className="h-5 w-5" />,
+      roles: ['patient', 'admin'],
     },
   ];
   
@@ -60,25 +82,46 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       title: "Medical Records",
       href: "/medical-records",
       icon: <ClipboardList className="h-5 w-5" />,
+      roles: ['patient', 'doctor', 'admin'],
     },
     {
       title: "Pharmacy",
       href: "/pharmacy",
       icon: <Pill className="h-5 w-5" />,
+      roles: ['patient', 'doctor', 'admin'],
     },
     {
       title: "Analytics",
       href: "/analytics",
       icon: <Activity className="h-5 w-5" />,
+      roles: ['doctor', 'admin'],
     },
     {
       title: "Settings",
       href: "/settings",
       icon: <Settings className="h-5 w-5" />,
+      roles: ['patient', 'doctor', 'admin'],
     },
   ];
 
+  const filteredMainNavItems = mainNavItems.filter(item => 
+    item.roles.includes(userRole)
+  );
+  
+  const filteredSecondaryNavItems = secondaryNavItems.filter(item => 
+    item.roles.includes(userRole)
+  );
+
   const navItemClasses = "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-secondary";
+  
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    navigate("/login");
+  };
   
   return (
     <aside 
@@ -96,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       
       <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
         <nav className="flex flex-col gap-1">
-          {mainNavItems.map((item) => (
+          {filteredMainNavItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
@@ -116,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
         <div className="my-2 h-px bg-border" />
         
         <nav className="flex flex-col gap-1">
-          {secondaryNavItems.map((item) => (
+          {filteredSecondaryNavItems.map((item) => (
             <Link
               key={item.href}
               to={item.href}
@@ -137,13 +180,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
       <div className="border-t p-4">
         <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <span className="text-sm font-medium">AD</span>
+            <span className="text-sm font-medium">
+              {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+            </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-medium">Admin User</span>
-            <span className="text-xs text-muted-foreground">admin@hospital.com</span>
+            <span className="text-sm font-medium">{user?.name || 'User'}</span>
+            <span className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</span>
           </div>
         </div>
+        
+        <Button 
+          variant="outline" 
+          className="mt-4 w-full justify-start text-muted-foreground"
+          onClick={handleLogout}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
     </aside>
   );
