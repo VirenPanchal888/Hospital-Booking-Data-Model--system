@@ -61,7 +61,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedUser = localStorage.getItem('hms_user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        // Ensure the role is valid
+        if (!['patient', 'doctor', 'admin'].includes(parsedUser.role)) {
+          console.error('Invalid user role detected:', parsedUser.role);
+          localStorage.removeItem('hms_user');
+        } else {
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('hms_user');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -80,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (matchedUser) {
       // In a real app, you would verify the password here
       if (password === 'password') {
+        console.log(`Logged in as ${role}: ${matchedUser.name}`);
         setUser(matchedUser);
         localStorage.setItem('hms_user', JSON.stringify(matchedUser));
         setIsLoading(false);

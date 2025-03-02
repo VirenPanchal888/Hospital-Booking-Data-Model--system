@@ -104,6 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
     },
   ];
 
+  // Enhanced filtering based on the current user role
   const filteredMainNavItems = mainNavItems.filter(item => 
     item.roles.includes(userRole)
   );
@@ -123,6 +124,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
     navigate("/login");
   };
   
+  // Role-specific sidebar titles
+  const getSidebarTitle = () => {
+    switch(userRole) {
+      case 'doctor':
+        return 'HealthWave - Doctor';
+      case 'admin':
+        return 'HealthWave - Admin';
+      default:
+        return 'HealthWave HMS';
+    }
+  };
+  
   return (
     <aside 
       className={cn(
@@ -131,10 +144,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
       )}
     >
       <div className="flex h-16 items-center gap-2 border-b px-6">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-          <span className="font-bold text-white">H</span>
+        <div className={cn(
+          "relative flex h-8 w-8 items-center justify-center rounded-md",
+          userRole === 'doctor' ? "bg-blue-600" : 
+          userRole === 'admin' ? "bg-purple-600" : "bg-primary"
+        )}>
+          <span className="font-bold text-white">
+            {userRole === 'doctor' ? 'D' : userRole === 'admin' ? 'A' : 'H'}
+          </span>
         </div>
-        <span className="font-semibold">HealthWave HMS</span>
+        <span className="font-semibold">{getSidebarTitle()}</span>
       </div>
       
       <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
@@ -178,15 +197,26 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
       </div>
       
       <div className="border-t p-4">
-        <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <span className="text-sm font-medium">
+        <div className={cn(
+          "flex items-center gap-3 rounded-lg p-3",
+          userRole === 'doctor' ? "bg-blue-50" : 
+          userRole === 'admin' ? "bg-purple-50" : "bg-secondary"
+        )}>
+          <div className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full text-primary-foreground",
+            userRole === 'doctor' ? "bg-blue-600" : 
+            userRole === 'admin' ? "bg-purple-600" : "bg-primary"
+          )}>
+            <span className="text-sm font-medium text-white">
               {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium">{user?.name || 'User'}</span>
-            <span className="text-xs text-muted-foreground">{user?.email || 'user@example.com'}</span>
+            <span className="text-xs text-muted-foreground">
+              {userRole === 'doctor' ? 'Medical Staff' : 
+               userRole === 'admin' ? 'Administrator' : 'Patient'}
+            </span>
           </div>
         </div>
         
