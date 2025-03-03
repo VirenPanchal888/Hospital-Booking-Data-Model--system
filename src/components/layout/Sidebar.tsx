@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Activity,
+  Ambulance,
   Calendar,
   ClipboardList,
   Home,
@@ -30,6 +31,7 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   roles: Array<'patient' | 'doctor' | 'admin'>;
+  highlight?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
@@ -95,6 +97,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
       href: "/analytics",
       icon: <Activity className="h-5 w-5" />,
       roles: ['doctor', 'admin'],
+    },
+    {
+      title: "Emergency Ambulance",
+      href: "/ambulance-request",
+      icon: <Ambulance className="h-5 w-5" />,
+      roles: ['patient'],
+      highlight: true,
     },
     {
       title: "Settings",
@@ -186,11 +195,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
                 navItemClasses,
                 location.pathname === item.href 
                   ? "bg-secondary font-medium text-foreground" 
-                  : "text-muted-foreground"
+                  : "text-muted-foreground",
+                item.highlight && "text-red-600 font-medium"
               )}
             >
               {item.icon}
               {item.title}
+              {item.highlight && (
+                <span className="ml-auto flex h-2 w-2 rounded-full bg-red-500"></span>
+              )}
             </Link>
           ))}
         </nav>
