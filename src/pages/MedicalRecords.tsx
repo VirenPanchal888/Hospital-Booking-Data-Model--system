@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface MedicalRecord {
   id: string;
@@ -122,6 +123,7 @@ const MedicalRecords = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
+  const { toast } = useToast();
   
   // Filter records based on user role, tab, and search term
   const filteredRecords = medicalRecordsData
@@ -142,13 +144,32 @@ const MedicalRecords = () => {
       }
       
       // Filter by search term
-      return (
-        record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.recordType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          record.patientName.toLowerCase().includes(searchLower) ||
+          record.recordType.toLowerCase().includes(searchLower) ||
+          record.doctorName.toLowerCase().includes(searchLower) ||
+          record.description.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return true;
     });
+  
+  const handleAddRecord = () => {
+    toast({
+      title: "Add Record",
+      description: "Opening new record form"
+    });
+  };
+  
+  const handleDownload = (filename: string) => {
+    toast({
+      title: "Downloading File",
+      description: `Downloading ${filename}`
+    });
+  };
   
   return (
     <div className="animate-slide-in-up">
@@ -173,7 +194,7 @@ const MedicalRecords = () => {
             />
           </div>
           {(user?.role === 'doctor' || user?.role === 'admin') && (
-            <Button className="gap-1">
+            <Button className="gap-1" onClick={handleAddRecord}>
               <PlusCircle className="h-4 w-4" />
               <span>Add Record</span>
             </Button>
@@ -191,7 +212,15 @@ const MedicalRecords = () => {
             <TabsTrigger value="consultation">Consultations</TabsTrigger>
           </TabsList>
           
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1"
+            onClick={() => toast({
+              title: "Filter",
+              description: "Opening advanced filters"
+            })}
+          >
             <Filter className="h-4 w-4" />
             <span>Filter</span>
           </Button>
@@ -209,7 +238,7 @@ const MedicalRecords = () => {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {filteredRecords.map((record) => (
-                <Card key={record.id} className="overflow-hidden">
+                <Card key={record.id} className="overflow-hidden transition-all duration-300 hover:shadow-md">
                   <CardHeader className="border-b bg-muted/30 p-4">
                     <div className="flex items-start justify-between">
                       <div>
@@ -225,19 +254,49 @@ const MedicalRecords = () => {
                             <span className="sr-only">Options</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="bg-white">
+                          <DropdownMenuItem 
+                            className="cursor-pointer"
+                            onClick={() => toast({
+                              title: "View Details",
+                              description: `Viewing details for record ${record.id}`
+                            })}
+                          >
+                            View Details
+                          </DropdownMenuItem>
+                          
                           {record.attachment && (
-                            <DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer"
+                              onClick={() => handleDownload(record.attachment!)}
+                            >
                               <Download className="mr-2 h-4 w-4" />
                               Download
                             </DropdownMenuItem>
                           )}
+                          
                           {(user?.role === 'doctor' || user?.role === 'admin') && (
                             <>
-                              <DropdownMenuItem>Edit Record</DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="cursor-pointer"
+                                onClick={() => toast({
+                                  title: "Edit Record",
+                                  description: `Opening editor for record ${record.id}`
+                                })}
+                              >
+                                Edit Record
+                              </DropdownMenuItem>
+                              
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
+                              
+                              <DropdownMenuItem 
+                                className="cursor-pointer text-red-600"
+                                onClick={() => toast({
+                                  title: "Delete Record",
+                                  description: `Are you sure you want to delete this record?`,
+                                  variant: "destructive"
+                                })}
+                              >
                                 Delete Record
                               </DropdownMenuItem>
                             </>
@@ -266,12 +325,17 @@ const MedicalRecords = () => {
                     </div>
                     
                     {record.attachment && (
-                      <div className="flex items-center justify-between rounded-md border p-2">
+                      <div className="flex items-center justify-between rounded-md border p-2 transition-colors hover:bg-muted/20">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-primary" />
                           <span className="text-sm">{record.attachment}</span>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={() => handleDownload(record.attachment!)}
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>

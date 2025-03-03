@@ -27,6 +27,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Appointment {
   id: string;
@@ -162,11 +164,57 @@ const getStatusBadge = (status: Appointment['status']) => {
 
 const Appointments = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [appointments, setAppointments] = useState(appointmentsData);
   
-  const filteredAppointments = activeTab === 'all' 
-    ? appointmentsData 
-    : appointmentsData.filter(app => app.status === activeTab);
+  // Filter appointments based on user role
+  const userAppointments = user?.role === 'patient' 
+    ? appointments.filter(app => app.patientId === 'P12345') // Hardcoded for demo
+    : user?.role === 'doctor'
+    ? appointments.filter(app => app.doctorId === 'D1') // Hardcoded for demo
+    : appointments;
+  
+  const filteredAppointments = userAppointments.filter(app => {
+    // Filter by status
+    if (activeTab !== 'all' && app.status !== activeTab) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        app.patientName.toLowerCase().includes(searchLower) ||
+        app.doctorName.toLowerCase().includes(searchLower) ||
+        app.type.toLowerCase().includes(searchLower) ||
+        app.specialty.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return true;
+  });
+  
+  const handleStatusChange = (id: string, newStatus: Appointment['status']) => {
+    setAppointments(prevAppointments => 
+      prevAppointments.map(app => 
+        app.id === id ? { ...app, status: newStatus } : app
+      )
+    );
+    
+    const statusMessages = {
+      completed: "Appointment marked as completed",
+      cancelled: "Appointment has been cancelled",
+      "no-show": "Patient marked as no-show"
+    };
+    
+    toast({
+      title: statusMessages[newStatus] || "Appointment status updated",
+      description: `Appointment ID: ${id}`,
+    });
+  };
   
   return (
     <div className="animate-slide-in-up">
@@ -174,15 +222,31 @@ const Appointments = () => {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
           <p className="text-muted-foreground">
-            Manage and schedule patient appointments.
+            {user?.role === 'patient' 
+              ? 'Manage your upcoming appointments'
+              : user?.role === 'doctor'
+              ? 'View and manage your patient appointments'
+              : 'Manage and schedule patient appointments'}
           </p>
         </div>
         
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button variant="outline" className="gap-1">
-            <Filter className="h-4 w-4" />
-            <span>Filter</span>
-          </Button>
+          <div className="relative w-full sm:w-auto">
+            <Input
+              placeholder="Search appointments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-8 w-full"
+            />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-0 top-0 h-10 w-10"
+              onClick={() => setSearchTerm('')}
+            >
+              {searchTerm ? 'X' : <Filter className="h-4 w-4" />}
+            </Button>
+          </div>
           <Button 
             className="gap-1"
             onClick={() => navigate('/new-appointment')}
@@ -293,11 +357,65 @@ const Appointments = () => {
                               <span className="sr-only">Actions</span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Appointment</DropdownMenuItem>
-                            <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Cancel</DropdownMenuItem>
+                          <DropdownMenuContent align="end" className="bg-white">
+                            <DropdownMenuItem 
+                              className="cursor-pointer"
+                              onClick={() => toast({
+                                title: "Viewing details",
+                                description: `Appointment for ${appointment.patientName}`
+                              })}
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            
+                            {(user?.role === 'doctor' || user?.role === 'admin') && (
+                              <DropdownMenuItem 
+                                className="cursor-pointer"
+                                onClick={() => toast({
+                                  title: "Edit appointment",
+                                  description: "Opening appointment editor"
+                                })}
+                              >
+                                Edit Appointment
+                              </DropdownMenuItem>
+                            )}
+                            
+                            <DropdownMenuItem 
+                              className="cursor-pointer"
+                              onClick={() => toast({
+                                title: "Reschedule",
+                                description: "Opening reschedule form"
+                              })}
+                            >
+                              Reschedule
+                            </DropdownMenuItem>
+                            
+                            {appointment.status === 'scheduled' && (
+                              <DropdownMenuItem 
+                                className="cursor-pointer text-red-600"
+                                onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                              >
+                                Cancel
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {user?.role === 'doctor' && appointment.status === 'scheduled' && (
+                              <DropdownMenuItem 
+                                className="cursor-pointer text-green-600"
+                                onClick={() => handleStatusChange(appointment.id, 'completed')}
+                              >
+                                Mark Completed
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {user?.role === 'doctor' && appointment.status === 'scheduled' && (
+                              <DropdownMenuItem 
+                                className="cursor-pointer text-amber-600"
+                                onClick={() => handleStatusChange(appointment.id, 'no-show')}
+                              >
+                                Mark No-Show
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>

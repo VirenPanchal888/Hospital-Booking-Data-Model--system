@@ -1,15 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/login');
+    }
+  }, [user, isLoading, navigate]);
   
   // Close sidebar on route change for mobile
   useEffect(() => {
@@ -30,6 +38,14 @@ const Layout: React.FC = () => {
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse text-primary">Loading...</div>
+      </div>
+    );
+  }
   
   return (
     <div className="flex min-h-screen flex-col bg-background transition-colors duration-300">

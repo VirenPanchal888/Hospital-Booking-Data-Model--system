@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/components/ui/use-toast';
 
 export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'no-show';
 export type UserRole = 'patient' | 'doctor' | 'admin' | undefined;
@@ -50,9 +51,23 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
   userRole,
   onStatusChange
 }) => {
+  const { toast } = useToast();
+  
   const handleStatusChange = (id: string, newStatus: AppointmentStatus) => {
     if (onStatusChange) {
       onStatusChange(id, newStatus);
+      
+      // Show toast notification
+      const statusMessages = {
+        completed: "Appointment marked as completed",
+        cancelled: "Appointment has been cancelled",
+        "no-show": "Patient marked as no-show"
+      };
+      
+      toast({
+        title: statusMessages[newStatus] || "Appointment status updated",
+        description: `Appointment ID: ${id}`,
+      });
     }
   };
 
@@ -104,22 +119,50 @@ const AppointmentList: React.FC<AppointmentListProps> = ({
                       <span className="sr-only">Actions</span>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Details</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Appointment</DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                    <DropdownMenuItem 
+                      className="cursor-pointer"
+                      onClick={() => toast({
+                        title: "Viewing details",
+                        description: `Appointment for ${appointment.patientName}`
+                      })}
+                    >
+                      View Details
+                    </DropdownMenuItem>
+                    
+                    {(userRole === 'doctor' || userRole === 'admin') && (
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={() => toast({
+                          title: "Edit appointment",
+                          description: "Opening appointment editor"
+                        })}
+                      >
+                        Edit Appointment
+                      </DropdownMenuItem>
+                    )}
+                    
                     {userRole === 'doctor' && appointment.status === 'scheduled' && (
-                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'completed')}>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={() => handleStatusChange(appointment.id, 'completed')}
+                      >
                         Mark as Completed
                       </DropdownMenuItem>
                     )}
+                    
                     {userRole === 'doctor' && appointment.status === 'scheduled' && (
-                      <DropdownMenuItem onClick={() => handleStatusChange(appointment.id, 'no-show')}>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={() => handleStatusChange(appointment.id, 'no-show')}
+                      >
                         Mark as No-Show
                       </DropdownMenuItem>
                     )}
+                    
                     {appointment.status === 'scheduled' && (
                       <DropdownMenuItem 
-                        className="text-red-600"
+                        className="cursor-pointer text-red-600"
                         onClick={() => handleStatusChange(appointment.id, 'cancelled')}
                       >
                         Cancel
