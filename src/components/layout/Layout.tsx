@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -11,6 +11,26 @@ const Layout: React.FC = () => {
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
+  // Close sidebar on route change for mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Set initial state based on window size
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   return (
     <div className="flex min-h-screen flex-col bg-background transition-colors duration-300">
       <Header toggleSidebar={toggleSidebar} />
@@ -18,8 +38,8 @@ const Layout: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar isOpen={sidebarOpen} userRole={user?.role} />
         
-        <main className="flex-1 md:ml-64 transition-all duration-300 ease-in-out">
-          <div className="container mx-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 md:ml-64 transition-all duration-500 ease-in-out">
+          <div className="container mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
             <Outlet />
           </div>
         </main>
