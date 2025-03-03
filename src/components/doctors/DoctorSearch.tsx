@@ -66,11 +66,11 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   return (
     <div className="relative w-full" ref={searchRef}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-pulse-soft" />
         <Input
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-4"
+          className="pl-8 pr-4 transition-all duration-300 focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
@@ -78,12 +78,12 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       </div>
 
       {showDropdown && filteredDoctors.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg">
+        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg animate-fade-in">
           <ul className="py-1 text-sm">
             {filteredDoctors.map((doctor) => (
               <li
                 key={doctor.id}
-                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors"
+                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-200 hover:translate-x-1"
                 onClick={() => handleSelectDoctor(doctor)}
               >
                 <div className="font-medium">{doctor.name}</div>
@@ -95,7 +95,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       )}
 
       {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground">
+        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-fade-in">
           No doctors found
         </div>
       )}
