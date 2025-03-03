@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { debounce } from 'lodash';
 
 interface Doctor {
   id: string;
@@ -24,20 +25,39 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Optimize search with debounce
+  const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      if (term.length < 2) {
+        setFilteredDoctors([]);
+        return;
+      }
+
+      const results = doctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(term.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(term.toLowerCase())
+      );
+      
+      setFilteredDoctors(results);
+    }, 150), // Lower debounce time for faster response
+    [doctors]
+  );
 
   useEffect(() => {
-    if (searchTerm.length < 2) {
-      setFilteredDoctors([]);
-      return;
-    }
-
-    const results = doctors.filter(doctor =>
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    debouncedSearch(searchTerm);
     
-    setFilteredDoctors(results);
-  }, [searchTerm, doctors]);
+    // Show dropdown immediately if we have a valid search term
+    if (searchTerm.length >= 2) {
+      setShowDropdown(true);
+    } else {
+      setShowDropdown(false);
+    }
+    
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchTerm, debouncedSearch]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,7 +74,6 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-    setShowDropdown(e.target.value.length >= 2);
   };
 
   const handleSelectDoctor = (doctor: Doctor) => {
@@ -70,7 +89,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
         <Input
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-4 transition-all duration-300 focus:ring-primary/20 hover:border-primary/30"
+          className="pl-8 pr-4 transition-all duration-200 focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
@@ -78,12 +97,12 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       </div>
 
       {showDropdown && filteredDoctors.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background shadow-lg animate-fade-in">
-          <ul className="py-1 text-sm">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-100">
+          <ul className="py-1 text-sm max-h-60 overflow-auto">
             {filteredDoctors.map((doctor) => (
               <li
                 key={doctor.id}
-                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-200 hover:translate-x-1"
+                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-100 hover:translate-x-1"
                 onClick={() => handleSelectDoctor(doctor)}
               >
                 <div className="font-medium">{doctor.name}</div>
@@ -95,7 +114,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       )}
 
       {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-        <div className="absolute z-10 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-fade-in">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-100">
           No doctors found
         </div>
       )}

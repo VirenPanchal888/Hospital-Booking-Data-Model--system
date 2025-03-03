@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ChevronDown,
   Download, 
@@ -115,38 +114,29 @@ const Doctors = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const specialties = useMemo(() => 
+    Array.from(new Set(doctors.map(doctor => doctor.specialty))),
+    [doctors]
+  );
+
   useEffect(() => {
-    filterDoctors();
-  }, [searchTerm, specialtyFilter, statusFilter, doctors]);
-
-  const filterDoctors = () => {
-    let filtered = doctors;
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(doctor => 
+    const filtered = doctors.filter(doctor => {
+      const matchesSearch = !searchTerm || 
         doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply specialty filter
-    if (specialtyFilter !== 'all') {
-      filtered = filtered.filter(doctor => 
-        doctor.specialty === specialtyFilter
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(doctor => 
-        doctor.status.toLowerCase() === statusFilter.toLowerCase()
-      );
-    }
-
+        doctor.id.toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesSpecialty = specialtyFilter === 'all' || 
+        doctor.specialty === specialtyFilter;
+        
+      const matchesStatus = statusFilter === 'all' || 
+        doctor.status.toLowerCase() === statusFilter.toLowerCase();
+        
+      return matchesSearch && matchesSpecialty && matchesStatus;
+    });
+    
     setFilteredDoctors(filtered);
-  };
+  }, [searchTerm, specialtyFilter, statusFilter, doctors]);
 
   const handleAddDoctor = (newDoctor: Omit<Doctor, 'status' | 'patients'>) => {
     const doctorToAdd: Doctor = {
@@ -164,7 +154,6 @@ const Doctors = () => {
   };
 
   const handleSelectDoctor = (doctor: Pick<Doctor, 'id' | 'name' | 'specialty'>) => {
-    // Find the doctor in our list
     const selectedDoctor = doctors.find(d => d.id === doctor.id);
     
     if (selectedDoctor) {
@@ -173,13 +162,15 @@ const Doctors = () => {
         description: `Selected ${selectedDoctor.name} (${selectedDoctor.specialty})`
       });
       
-      // Here you would typically navigate to doctor profile or take some action
       console.log("Selected doctor:", selectedDoctor);
     }
   };
 
-  // Get all unique specialties from doctors for filter options
-  const specialties = Array.from(new Set(doctors.map(doctor => doctor.specialty)));
+  const clearFilters = () => {
+    setSearchTerm('');
+    setSpecialtyFilter('all');
+    setStatusFilter('all');
+  };
 
   return (
     <div className="animate-slide-in-up">
@@ -205,7 +196,7 @@ const Doctors = () => {
                 <span className="sr-only">Filter</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuContent align="end" className="w-[200px] bg-background border shadow-md z-50">
               <div className="p-2">
                 <div className="mb-2">
                   <p className="mb-1 text-xs font-medium">Specialty</p>
@@ -216,7 +207,7 @@ const Doctors = () => {
                     <SelectTrigger className="h-8">
                       <SelectValue placeholder="All Specialties" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border shadow-md z-50">
                       <SelectItem value="all">All Specialties</SelectItem>
                       {specialties.map(specialty => (
                         <SelectItem key={specialty} value={specialty}>
@@ -236,7 +227,7 @@ const Doctors = () => {
                     <SelectTrigger className="h-8">
                       <SelectValue placeholder="All Status" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border shadow-md z-50">
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
@@ -258,12 +249,12 @@ const Doctors = () => {
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+            <DropdownMenuContent align="end" className="bg-background border shadow-md z-50">
+              <DropdownMenuItem className="cursor-pointer">
                 <Download className="mr-2 h-4 w-4" />
                 Export as CSV
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
                 <Download className="mr-2 h-4 w-4" />
                 Export as PDF
               </DropdownMenuItem>
@@ -306,11 +297,7 @@ const Doctors = () => {
                         size="sm" 
                         variant="outline" 
                         className="mt-2 gap-1"
-                        onClick={() => {
-                          setSearchTerm('');
-                          setSpecialtyFilter('all');
-                          setStatusFilter('all');
-                        }}
+                        onClick={clearFilters}
                       >
                         Clear filters
                       </Button>
@@ -367,14 +354,14 @@ const Doctors = () => {
                             <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Schedule Appointment</DropdownMenuItem>
-                          <DropdownMenuItem>Send Message</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="bg-background border shadow-md z-50">
+                          <DropdownMenuItem className="cursor-pointer">View Profile</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">Schedule Appointment</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">Send Message</DropdownMenuItem>
                           {user?.role === 'admin' && (
                             <>
-                              <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
+                              <DropdownMenuItem className="cursor-pointer">Edit Details</DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer text-red-600">
                                 Deactivate Doctor
                               </DropdownMenuItem>
                             </>
