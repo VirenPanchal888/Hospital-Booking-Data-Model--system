@@ -15,6 +15,7 @@ import MedicalRecords from "./pages/MedicalRecords";
 import Pharmacy from "./pages/Pharmacy";
 import Analytics from "./pages/Analytics";
 import AmbulanceRequest from "./pages/AmbulanceRequest";
+import GetPrediction from "./pages/GetPrediction";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -64,6 +65,7 @@ const AppRoutes = () => {
           <Route path="pharmacy" element={<Pharmacy />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="ambulance-request" element={<AmbulanceRequest />} />
+          <Route path="get-prediction" element={<GetPrediction />} />
         </Route>
         
         {/* Catch-all route */}
