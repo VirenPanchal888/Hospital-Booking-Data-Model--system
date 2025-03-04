@@ -143,11 +143,11 @@ const NewAppointment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="patient">Patient</Label>
                   <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                    <SelectTrigger id="patient" className="w-full bg-background transition-all duration-100 border border-input">
+                    <SelectTrigger id="patient" className="w-full bg-background transition-all duration-75 border border-input">
                       <SelectValue placeholder="Select patient" />
                     </SelectTrigger>
                     <SelectContent 
-                      className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                      className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]"
                       position="popper"
                       sideOffset={5}
                     >
@@ -170,11 +170,11 @@ const NewAppointment: React.FC = () => {
                   
                   <div className="mt-2">
                     <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                      <SelectTrigger id="doctor" className="w-full bg-background transition-all duration-100 border border-input">
+                      <SelectTrigger id="doctor" className="w-full bg-background transition-all duration-75 border border-input">
                         <SelectValue placeholder="Or select from the list" />
                       </SelectTrigger>
                       <SelectContent 
-                        className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                        className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]"
                         position="popper"
                         sideOffset={5}
                       >
@@ -192,11 +192,11 @@ const NewAppointment: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="type">Appointment Type</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger id="type" className="w-full bg-background transition-all duration-100 border border-input">
+                  <SelectTrigger id="type" className="w-full bg-background transition-all duration-75 border border-input">
                     <SelectValue placeholder="Select appointment type" />
                   </SelectTrigger>
                   <SelectContent 
-                    className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                    className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]"
                     position="popper"
                     sideOffset={5}
                   >
@@ -217,7 +217,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal transition-all duration-100",
+                          "w-full justify-start text-left font-normal transition-all duration-75",
                           !selectedDate && "text-muted-foreground"
                         )}
                       >
@@ -225,7 +225,7 @@ const NewAppointment: React.FC = () => {
                         {selectedDate ? format(selectedDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50">
+                    <PopoverContent className="w-auto p-0 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -247,7 +247,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal transition-all duration-100",
+                          "w-full justify-start text-left font-normal transition-all duration-75",
                           !selectedTime && "text-muted-foreground"
                         )}
                         disabled={!selectedDoctor || !selectedDate}
@@ -256,7 +256,7 @@ const NewAppointment: React.FC = () => {
                         {selectedTime || "Select time"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-64 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50">
+                    <PopoverContent className="w-64 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]">
                       <div className="grid gap-1">
                         <Label className="mb-2">Available Slots</Label>
                         {!selectedDoctor || !selectedDate ? (

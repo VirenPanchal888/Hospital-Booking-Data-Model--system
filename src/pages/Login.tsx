@@ -107,13 +107,13 @@ const Login = () => {
                   value={role}
                   onValueChange={(value) => setRole(value as 'patient' | 'doctor' | 'admin')}
                 >
-                  <SelectTrigger className="transition-all duration-100 bg-background focus:ring-primary/20">
+                  <SelectTrigger className="transition-all duration-75 bg-background focus:ring-primary/20">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent
                     position="popper"
                     sideOffset={5}
-                    className="bg-background border border-border shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                    className="bg-background border border-border shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-[100]"
                   >
                     <SelectItem value="patient" className="transition-all duration-75 hover:translate-x-1">Patient</SelectItem>
                     <SelectItem value="doctor" className="transition-all duration-75 hover:translate-x-1">Doctor</SelectItem>

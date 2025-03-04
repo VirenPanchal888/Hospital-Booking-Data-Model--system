@@ -26,7 +26,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   
-  // Use useMemo for more efficient filtering
+  // Optimize filtering with useMemo for instant results
   const getFilteredDoctors = useMemo(() => {
     if (searchTerm.length < 2) return [];
     
@@ -36,18 +36,18 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
     );
   }, [searchTerm, doctors]);
   
-  // Optimize search with debounce
+  // Ultra-fast debounce for responsive feel
   const debouncedSearch = useCallback(
     debounce(() => {
       setFilteredDoctors(getFilteredDoctors);
-    }, 100), // Even lower debounce time for faster response
+    }, 50), // Even faster response time
     [getFilteredDoctors]
   );
 
   useEffect(() => {
     debouncedSearch();
     
-    // Show dropdown immediately if we have a valid search term
+    // Show dropdown immediately for better UX
     if (searchTerm.length >= 2) {
       setShowDropdown(true);
     } else {
@@ -89,7 +89,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
         <Input
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-4 transition-all duration-100 focus:ring-primary/20 hover:border-primary/30"
+          className="pl-8 pr-4 transition-all duration-75 focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
@@ -97,7 +97,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       </div>
 
       {showDropdown && filteredDoctors.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-75">
+        <div className="absolute z-[100] mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-75">
           <ul className="py-1 text-sm max-h-60 overflow-auto">
             {filteredDoctors.map((doctor) => (
               <li
@@ -114,7 +114,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       )}
 
       {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-75">
+        <div className="absolute z-[100] mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-75">
           No doctors found
         </div>
       )}
