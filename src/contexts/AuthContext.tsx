@@ -16,6 +16,8 @@ interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
+  showWelcomeAnimation: boolean;
+  setShowWelcomeAnimation: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +58,7 @@ const mockUsers = [
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showWelcomeAnimation, setShowWelcomeAnimation] = useState(false);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -82,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     // Find matching user
     const matchedUser = mockUsers.find(
@@ -95,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log(`Logged in as ${role}: ${matchedUser.name}`);
         setUser(matchedUser);
         localStorage.setItem('hms_user', JSON.stringify(matchedUser));
+        setShowWelcomeAnimation(true);
         setIsLoading(false);
         return true;
       }
@@ -110,7 +114,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      isLoading, 
+      showWelcomeAnimation, 
+      setShowWelcomeAnimation 
+    }}>
       {children}
     </AuthContext.Provider>
   );
