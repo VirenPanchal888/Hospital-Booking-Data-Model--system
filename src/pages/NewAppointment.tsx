@@ -9,12 +9,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format, addDays, addMonths, isBefore, isAfter } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { CalendarIcon, Clock, Search } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import DoctorSearch from '@/components/doctors/DoctorSearch';
 
 // Sample data
 const appointmentTypes = [
@@ -132,6 +133,11 @@ const NewAppointment: React.FC = () => {
       navigate('/appointments');
     }, 1000);
   };
+
+  // Handle doctor selection from DoctorSearch component
+  const handleDoctorSelect = (doctor: { id: string; name: string; specialty: string }) => {
+    setSelectedDoctor(doctor.id);
+  };
   
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
@@ -152,12 +158,12 @@ const NewAppointment: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="patient">Patient</Label>
                   <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                    <SelectTrigger id="patient">
+                    <SelectTrigger id="patient" className="w-full bg-background transition-all duration-200 border border-input">
                       <SelectValue placeholder="Select patient" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
+                    <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
                       {patients.map(patient => (
-                        <SelectItem key={patient.id} value={patient.id}>
+                        <SelectItem key={patient.id} value={patient.id} className="transition-all duration-100 hover:translate-x-1">
                           {patient.name} (ID: {patient.patientId})
                         </SelectItem>
                       ))}
@@ -167,18 +173,28 @@ const NewAppointment: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="doctor">Doctor</Label>
-                  <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                    <SelectTrigger id="doctor">
-                      <SelectValue placeholder="Select doctor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {doctors.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id}>
-                          {doctor.name} ({doctor.specialty})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Use DoctorSearch for better doctor selection experience */}
+                  <DoctorSearch
+                    doctors={doctors}
+                    onSelectDoctor={handleDoctorSelect}
+                    placeholder="Search for a doctor by name or specialty"
+                  />
+                  
+                  {/* Alternative dropdown for simpler selection */}
+                  <div className="mt-2">
+                    <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                      <SelectTrigger id="doctor" className="w-full bg-background transition-all duration-200 border border-input">
+                        <SelectValue placeholder="Or select from the list" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                        {doctors.map((doctor) => (
+                          <SelectItem key={doctor.id} value={doctor.id} className="transition-all duration-100 hover:translate-x-1">
+                            {doctor.name} ({doctor.specialty})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               )}
               
@@ -186,12 +202,12 @@ const NewAppointment: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="type">Appointment Type</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger id="type">
+                  <SelectTrigger id="type" className="w-full bg-background transition-all duration-200 border border-input">
                     <SelectValue placeholder="Select appointment type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
                     {appointmentTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id}>
+                      <SelectItem key={type.id} value={type.id} className="transition-all duration-100 hover:translate-x-1">
                         {type.name}
                       </SelectItem>
                     ))}
@@ -208,7 +224,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal transition-all duration-200",
                           !selectedDate && "text-muted-foreground"
                         )}
                       >
@@ -216,7 +232,7 @@ const NewAppointment: React.FC = () => {
                         {selectedDate ? format(selectedDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white">
+                    <PopoverContent className="w-auto p-0 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -238,7 +254,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal transition-all duration-200",
                           !selectedTime && "text-muted-foreground"
                         )}
                         disabled={!selectedDoctor || !selectedDate}
@@ -247,7 +263,7 @@ const NewAppointment: React.FC = () => {
                         {selectedTime || "Select time"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 bg-white">
+                    <PopoverContent className="w-64 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
                       <div className="grid gap-1">
                         <Label className="mb-2">Available Slots</Label>
                         {!selectedDoctor || !selectedDate ? (
@@ -266,7 +282,7 @@ const NewAppointment: React.FC = () => {
                             >
                               <div className="grid gap-2">
                                 {availableTimeSlots.map((slot) => (
-                                  <div key={slot} className="flex items-center">
+                                  <div key={slot} className="flex items-center transition-all duration-100 hover:bg-muted hover:translate-x-1 rounded-md p-1">
                                     <RadioGroupItem value={slot} id={slot} />
                                     <Label htmlFor={slot} className="ml-2">{slot}</Label>
                                   </div>
@@ -289,6 +305,7 @@ const NewAppointment: React.FC = () => {
                   placeholder="Please describe your symptoms or reason for the appointment" 
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
+                  className="min-h-[120px] transition-all duration-200"
                 />
               </div>
             </CardContent>
@@ -306,17 +323,17 @@ const NewAppointment: React.FC = () => {
               <div className="space-y-2">
                 <Label htmlFor="insuranceType">Insurance Provider</Label>
                 <Select value={insuranceType} onValueChange={setInsuranceType}>
-                  <SelectTrigger id="insuranceType">
+                  <SelectTrigger id="insuranceType" className="w-full bg-background transition-all duration-200 border border-input">
                     <SelectValue placeholder="Select insurance provider" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="bluecross">Blue Cross Blue Shield</SelectItem>
-                    <SelectItem value="aetna">Aetna</SelectItem>
-                    <SelectItem value="cigna">Cigna</SelectItem>
-                    <SelectItem value="united">United Healthcare</SelectItem>
-                    <SelectItem value="medicare">Medicare</SelectItem>
-                    <SelectItem value="medicaid">Medicaid</SelectItem>
-                    <SelectItem value="none">None/Self-Pay</SelectItem>
+                  <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                    <SelectItem value="bluecross" className="transition-all duration-100 hover:translate-x-1">Blue Cross Blue Shield</SelectItem>
+                    <SelectItem value="aetna" className="transition-all duration-100 hover:translate-x-1">Aetna</SelectItem>
+                    <SelectItem value="cigna" className="transition-all duration-100 hover:translate-x-1">Cigna</SelectItem>
+                    <SelectItem value="united" className="transition-all duration-100 hover:translate-x-1">United Healthcare</SelectItem>
+                    <SelectItem value="medicare" className="transition-all duration-100 hover:translate-x-1">Medicare</SelectItem>
+                    <SelectItem value="medicaid" className="transition-all duration-100 hover:translate-x-1">Medicaid</SelectItem>
+                    <SelectItem value="none" className="transition-all duration-100 hover:translate-x-1">None/Self-Pay</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -328,19 +345,26 @@ const NewAppointment: React.FC = () => {
                   placeholder="Insurance policy number" 
                   value={insuranceInfo}
                   onChange={(e) => setInsuranceInfo(e.target.value)}
+                  className="transition-all duration-200"
                 />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => navigate('/appointments')}>
+              <Button type="button" variant="outline" onClick={() => navigate('/appointments')} 
+                className="transition-all duration-200 hover:bg-muted">
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={!isFormValid() || isSubmitting}
-                className="transition-all duration-200 hover:scale-105"
+                className="transition-all duration-200 hover:scale-105 relative"
               >
                 {isSubmitting ? "Scheduling..." : "Schedule Appointment"}
+                {isSubmitting && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="animate-pulse-soft">Processing...</span>
+                  </span>
+                )}
               </Button>
             </CardFooter>
           </Card>
