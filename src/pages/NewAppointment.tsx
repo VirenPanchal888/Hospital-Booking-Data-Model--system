@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +16,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import DoctorSearch from '@/components/doctors/DoctorSearch';
 
-// Sample data
 const appointmentTypes = [
   { id: '1', name: 'General Checkup' },
   { id: '2', name: 'Follow-up' },
@@ -43,22 +41,16 @@ const patients = [
   { id: 'patient5', name: 'William Taylor', patientId: 'P12349' },
 ];
 
-// Generate time slots based on doctor availability
 const generateTimeSlots = (doctorId: string, selectedDate: Date | undefined) => {
-  // Default time slots
   const defaultSlots = [
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
     '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM',
     '04:00 PM', '04:30 PM'
   ];
   
-  // In a real app, we would check doctor availability
-  // For now, simulate some unavailable slots for specific doctors
   if (doctorId === '1' && selectedDate && selectedDate.getDay() === 1) {
-    // On Mondays, Dr. Jane Smith has fewer slots available
     return defaultSlots.filter((_, index) => index % 3 !== 0);
   } else if (doctorId === '3') {
-    // Dr. Emily Chen has different hours
     return [
       '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', 
       '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM'
@@ -73,7 +65,6 @@ const NewAppointment: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Form state
   const [selectedDoctor, setSelectedDoctor] = useState('');
   const [selectedPatient, setSelectedPatient] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -85,21 +76,18 @@ const NewAppointment: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   
-  // Role-based states
   const isDoctorRole = user?.role === 'doctor';
   const isPatientRole = user?.role === 'patient';
   const isAdminRole = user?.role === 'admin';
 
-  // Update available time slots when doctor or date changes
   useEffect(() => {
     if (selectedDoctor && selectedDate) {
       const slots = generateTimeSlots(selectedDoctor, selectedDate);
       setAvailableTimeSlots(slots);
-      setSelectedTime(''); // Reset selected time when doctor/date changes
+      setSelectedTime('');
     }
   }, [selectedDoctor, selectedDate]);
   
-  // Check if all required fields are filled
   const isFormValid = () => {
     if (isDoctorRole) {
       return selectedPatient && selectedType && selectedDate && selectedTime && reason;
@@ -122,7 +110,6 @@ const NewAppointment: React.FC = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
       toast({
         title: "Appointment Scheduled",
@@ -134,7 +121,6 @@ const NewAppointment: React.FC = () => {
     }, 1000);
   };
 
-  // Handle doctor selection from DoctorSearch component
   const handleDoctorSelect = (doctor: { id: string; name: string; specialty: string }) => {
     setSelectedDoctor(doctor.id);
   };
@@ -153,17 +139,20 @@ const NewAppointment: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Doctor/Patient Selection based on role */}
               {isDoctorRole ? (
                 <div className="space-y-2">
                   <Label htmlFor="patient">Patient</Label>
                   <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                    <SelectTrigger id="patient" className="w-full bg-background transition-all duration-200 border border-input">
+                    <SelectTrigger id="patient" className="w-full bg-background transition-all duration-100 border border-input">
                       <SelectValue placeholder="Select patient" />
                     </SelectTrigger>
-                    <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                    <SelectContent 
+                      className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                      position="popper"
+                      sideOffset={5}
+                    >
                       {patients.map(patient => (
-                        <SelectItem key={patient.id} value={patient.id} className="transition-all duration-100 hover:translate-x-1">
+                        <SelectItem key={patient.id} value={patient.id} className="transition-all duration-75 hover:translate-x-1">
                           {patient.name} (ID: {patient.patientId})
                         </SelectItem>
                       ))}
@@ -173,22 +162,24 @@ const NewAppointment: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="doctor">Doctor</Label>
-                  {/* Use DoctorSearch for better doctor selection experience */}
                   <DoctorSearch
                     doctors={doctors}
                     onSelectDoctor={handleDoctorSelect}
                     placeholder="Search for a doctor by name or specialty"
                   />
                   
-                  {/* Alternative dropdown for simpler selection */}
                   <div className="mt-2">
                     <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                      <SelectTrigger id="doctor" className="w-full bg-background transition-all duration-200 border border-input">
+                      <SelectTrigger id="doctor" className="w-full bg-background transition-all duration-100 border border-input">
                         <SelectValue placeholder="Or select from the list" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                      <SelectContent 
+                        className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                        position="popper"
+                        sideOffset={5}
+                      >
                         {doctors.map((doctor) => (
-                          <SelectItem key={doctor.id} value={doctor.id} className="transition-all duration-100 hover:translate-x-1">
+                          <SelectItem key={doctor.id} value={doctor.id} className="transition-all duration-75 hover:translate-x-1">
                             {doctor.name} ({doctor.specialty})
                           </SelectItem>
                         ))}
@@ -198,16 +189,19 @@ const NewAppointment: React.FC = () => {
                 </div>
               )}
               
-              {/* Appointment Type */}
               <div className="space-y-2">
                 <Label htmlFor="type">Appointment Type</Label>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger id="type" className="w-full bg-background transition-all duration-200 border border-input">
+                  <SelectTrigger id="type" className="w-full bg-background transition-all duration-100 border border-input">
                     <SelectValue placeholder="Select appointment type" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                  <SelectContent 
+                    className="max-h-[300px] overflow-y-auto border border-border bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                    position="popper"
+                    sideOffset={5}
+                  >
                     {appointmentTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id} className="transition-all duration-100 hover:translate-x-1">
+                      <SelectItem key={type.id} value={type.id} className="transition-all duration-75 hover:translate-x-1">
                         {type.name}
                       </SelectItem>
                     ))}
@@ -215,7 +209,6 @@ const NewAppointment: React.FC = () => {
                 </Select>
               </div>
               
-              {/* Date & Time Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Date</Label>
@@ -224,7 +217,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal transition-all duration-200",
+                          "w-full justify-start text-left font-normal transition-all duration-100",
                           !selectedDate && "text-muted-foreground"
                         )}
                       >
@@ -232,7 +225,7 @@ const NewAppointment: React.FC = () => {
                         {selectedDate ? format(selectedDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                    <PopoverContent className="w-auto p-0 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -254,7 +247,7 @@ const NewAppointment: React.FC = () => {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal transition-all duration-200",
+                          "w-full justify-start text-left font-normal transition-all duration-100",
                           !selectedTime && "text-muted-foreground"
                         )}
                         disabled={!selectedDoctor || !selectedDate}
@@ -263,7 +256,7 @@ const NewAppointment: React.FC = () => {
                         {selectedTime || "Select time"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-64 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-100 z-50">
+                    <PopoverContent className="w-64 bg-background shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50">
                       <div className="grid gap-1">
                         <Label className="mb-2">Available Slots</Label>
                         {!selectedDoctor || !selectedDate ? (
@@ -282,7 +275,7 @@ const NewAppointment: React.FC = () => {
                             >
                               <div className="grid gap-2">
                                 {availableTimeSlots.map((slot) => (
-                                  <div key={slot} className="flex items-center transition-all duration-100 hover:bg-muted hover:translate-x-1 rounded-md p-1">
+                                  <div key={slot} className="flex items-center transition-all duration-75 hover:bg-muted hover:translate-x-1 rounded-md p-1">
                                     <RadioGroupItem value={slot} id={slot} />
                                     <Label htmlFor={slot} className="ml-2">{slot}</Label>
                                   </div>
@@ -297,7 +290,6 @@ const NewAppointment: React.FC = () => {
                 </div>
               </div>
               
-              {/* Reason */}
               <div className="space-y-2">
                 <Label htmlFor="reason">Reason for Visit</Label>
                 <Textarea 
@@ -311,7 +303,6 @@ const NewAppointment: React.FC = () => {
             </CardContent>
           </Card>
           
-          {/* Insurance Information */}
           <Card>
             <CardHeader>
               <CardTitle>Insurance Information</CardTitle>

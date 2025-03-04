@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { debounce } from 'lodash';
@@ -26,26 +26,26 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
   
+  // Use useMemo for more efficient filtering
+  const getFilteredDoctors = useMemo(() => {
+    if (searchTerm.length < 2) return [];
+    
+    return doctors.filter(doctor =>
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm, doctors]);
+  
   // Optimize search with debounce
   const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      if (term.length < 2) {
-        setFilteredDoctors([]);
-        return;
-      }
-
-      const results = doctors.filter(doctor =>
-        doctor.name.toLowerCase().includes(term.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(term.toLowerCase())
-      );
-      
-      setFilteredDoctors(results);
-    }, 150), // Lower debounce time for faster response
-    [doctors]
+    debounce(() => {
+      setFilteredDoctors(getFilteredDoctors);
+    }, 100), // Even lower debounce time for faster response
+    [getFilteredDoctors]
   );
 
   useEffect(() => {
-    debouncedSearch(searchTerm);
+    debouncedSearch();
     
     // Show dropdown immediately if we have a valid search term
     if (searchTerm.length >= 2) {
@@ -85,11 +85,11 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   return (
     <div className="relative w-full" ref={searchRef}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-pulse-soft" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-4 transition-all duration-200 focus:ring-primary/20 hover:border-primary/30"
+          className="pl-8 pr-4 transition-all duration-100 focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
@@ -97,12 +97,12 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       </div>
 
       {showDropdown && filteredDoctors.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-100">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-75">
           <ul className="py-1 text-sm max-h-60 overflow-auto">
             {filteredDoctors.map((doctor) => (
               <li
                 key={doctor.id}
-                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-100 hover:translate-x-1"
+                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-75 hover:translate-x-1"
                 onClick={() => handleSelectDoctor(doctor)}
               >
                 <div className="font-medium">{doctor.name}</div>
@@ -114,7 +114,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       )}
 
       {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-100">
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-75">
           No doctors found
         </div>
       )}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
-  // If already logged in, redirect to home
   React.useEffect(() => {
     if (user) {
       navigate('/');
@@ -109,13 +107,17 @@ const Login = () => {
                   value={role}
                   onValueChange={(value) => setRole(value as 'patient' | 'doctor' | 'admin')}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="transition-all duration-100 bg-background focus:ring-primary/20">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="patient">Patient</SelectItem>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
+                  <SelectContent
+                    position="popper"
+                    sideOffset={5}
+                    className="bg-background border border-border shadow-lg animate-in fade-in-80 zoom-in-95 duration-75 z-50"
+                  >
+                    <SelectItem value="patient" className="transition-all duration-75 hover:translate-x-1">Patient</SelectItem>
+                    <SelectItem value="doctor" className="transition-all duration-75 hover:translate-x-1">Doctor</SelectItem>
+                    <SelectItem value="admin" className="transition-all duration-75 hover:translate-x-1">Administrator</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
