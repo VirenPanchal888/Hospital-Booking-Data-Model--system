@@ -179,6 +179,115 @@
   height: auto;
 }
 
+/* Introduction Overlay Styles */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.95);
+  z-index: 9998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease-out, visibility 0.6s ease-out;
+  overflow-y: auto;
+}
+
+.intro-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.intro-content {
+  max-width: 900px;
+  max-height: 80vh;
+  background-color: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 2rem;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: slideInUp 0.8s ease-out forwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dark .intro-content {
+  background-color: hsl(222, 47%, 11%);
+  color: hsl(210, 40%, 98%);
+}
+
+.intro-logo {
+  max-width: 280px;
+  height: auto;
+  margin-bottom: 1.5rem;
+  animation: pulse 2s infinite;
+}
+
+.intro-text {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.intro-text p {
+  margin-bottom: 1.25rem;
+}
+
+.intro-text strong {
+  color: hsl(210, 100%, 50%);
+}
+
+.skip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: hsl(210, 100%, 50%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.skip-button:hover {
+  background-color: hsl(210, 100%, 45%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @keyframes logoReveal {
   0% {
     transform: scale(0.8);
