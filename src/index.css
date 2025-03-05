@@ -1,8 +1,7 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -15,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 196 100% 47%;
+    --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 20% 96%;
@@ -24,26 +23,26 @@
     --muted: 210 20% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 196 100% 47%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 20% 96%;
+    --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 196 100% 47%;
+    --ring: 210 100% 50%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 196 100% 47%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217 33% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 18%;
-    --sidebar-ring: 196 100% 47%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 240 6% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
@@ -95,18 +94,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "ss01", "ss03", "cv01", "cv02", "cv03";
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', sans-serif;
     letter-spacing: -0.01em;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', system-ui, sans-serif;
     letter-spacing: -0.02em;
     font-weight: 600;
   }
@@ -121,7 +119,7 @@
     @apply outline-none ring-2 ring-primary/20 ring-offset-1 ring-offset-background transition-all duration-200;
   }
   
-  /* Card hover effect */
+  /* Custom card hover effect */
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
@@ -133,7 +131,7 @@
   
   /* Glassmorphism effect */
   .glass {
-    @apply bg-white/90 backdrop-blur-lg saturate-[180%] shadow-md;
+    @apply bg-white/80 backdrop-blur-lg saturate-[180%];
   }
   
   /* Minimalist button styles */
@@ -438,134 +436,5 @@
   .page-transition-exit-active {
     opacity: 0;
     transition: opacity 0.3s;
-  }
-}
-
-/* Improved dropdown animations */
-.dropdown-enter {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.dropdown-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 500ms, transform 500ms;
-}
-
-.dropdown-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.dropdown-exit-active {
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 500ms, transform 500ms;
-}
-
-/* Enhanced page transitions */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 400ms ease-out, transform 400ms ease-out;
-}
-
-.page-transition-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 300ms ease-in, transform 300ms ease-in;
-}
-
-/* Updated card styles */
-.health-card {
-  @apply relative overflow-hidden rounded-xl border bg-card p-6 shadow-sm transition-all duration-300;
-}
-
-.health-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 5px;
-  @apply bg-primary;
-}
-
-.health-card:hover {
-  @apply shadow-md -translate-y-1;
-}
-
-/* Improved button styles */
-.btn-health {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-primary/90 hover:shadow-md hover:-translate-y-0.5;
-}
-
-/* Enhanced navigation styling */
-.nav-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-300;
-}
-
-.nav-item::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
-  width: 0;
-  @apply bg-primary;
-  transition: width 0.3s ease;
-}
-
-.nav-item:hover::after,
-.nav-item.active::after {
-  width: 100%;
-}
-
-/* Dropdown styles */
-.dropdown-content {
-  animation: dropdownFadeIn 0.5s ease-out forwards;
-  transform-origin: top;
-}
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Breathing background effect for important cards */
-.breathing-bg {
-  animation: breathe 8s ease-in-out infinite;
-  background-size: 400% 400%;
-  background-image: linear-gradient(
-    to right,
-    rgba(var(--primary), 0.05),
-    rgba(var(--primary), 0.1),
-    rgba(var(--primary), 0.05)
-  );
-}
-
-@keyframes breathe {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
   }
 }
