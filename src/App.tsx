@@ -19,13 +19,12 @@ import GetPrediction from "./pages/GetPrediction";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import WelcomeAnimation from "./components/animations/WelcomeAnimation";
 
 const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading, showWelcomeAnimation, setShowWelcomeAnimation } = useAuth();
+  const { user, isLoading } = useAuth();
   
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center">
@@ -35,10 +34,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) {
     return <Navigate to="/login" replace />;
-  }
-
-  if (showWelcomeAnimation) {
-    return <WelcomeAnimation onComplete={() => setShowWelcomeAnimation(false)} />;
   }
   
   return <>{children}</>;

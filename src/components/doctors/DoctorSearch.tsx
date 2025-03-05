@@ -36,11 +36,11 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
     );
   }, [searchTerm, doctors]);
   
-  // Faster debounce for responsive feel
+  // Ultra-fast debounce for responsive feel
   const debouncedSearch = useCallback(
     debounce(() => {
       setFilteredDoctors(getFilteredDoctors);
-    }, 30), // Even faster response time
+    }, 50), // Even faster response time
     [getFilteredDoctors]
   );
 
