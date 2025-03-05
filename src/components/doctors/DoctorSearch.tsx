@@ -36,11 +36,11 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
     );
   }, [searchTerm, doctors]);
   
-  // Ultra-fast debounce for responsive feel
+  // Adjust debounce for responsive feel but not too fast
   const debouncedSearch = useCallback(
     debounce(() => {
       setFilteredDoctors(getFilteredDoctors);
-    }, 50), // Even faster response time
+    }, 150), // Balanced response time
     [getFilteredDoctors]
   );
 
@@ -62,7 +62,10 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
+        // Use a small delay to ensure the user sees their selection before the dropdown closes
+        setTimeout(() => {
+          setShowDropdown(false);
+        }, 150);
       }
     };
 
@@ -79,7 +82,11 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const handleSelectDoctor = (doctor: Doctor) => {
     onSelectDoctor(doctor);
     setSearchTerm('');
-    setShowDropdown(false);
+    
+    // Delay hiding dropdown slightly for better UX
+    setTimeout(() => {
+      setShowDropdown(false);
+    }, 100);
   };
 
   return (
@@ -89,20 +96,21 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
         <Input
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-4 transition-all duration-75 focus:ring-primary/20 hover:border-primary/30"
+          className="pl-8 pr-4 transition-all focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
+          autoComplete="off" // Prevent browser's native autocomplete
         />
       </div>
 
       {showDropdown && filteredDoctors.length > 0 && (
-        <div className="absolute z-[100] mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-75">
+        <div className="absolute z-[9999] mt-1 w-full rounded-md border bg-white shadow-lg animate-in fade-in-20 zoom-in-95 duration-150">
           <ul className="py-1 text-sm max-h-60 overflow-auto">
             {filteredDoctors.map((doctor) => (
               <li
                 key={doctor.id}
-                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-75 hover:translate-x-1"
+                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-150 hover:translate-x-1"
                 onClick={() => handleSelectDoctor(doctor)}
               >
                 <div className="font-medium">{doctor.name}</div>
@@ -114,7 +122,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
       )}
 
       {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-        <div className="absolute z-[100] mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-75">
+        <div className="absolute z-[9999] mt-1 w-full rounded-md border bg-white p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-150">
           No doctors found
         </div>
       )}

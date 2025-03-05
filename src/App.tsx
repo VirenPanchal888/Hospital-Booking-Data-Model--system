@@ -20,16 +20,29 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">
-      <div className="animate-pulse-soft">Loading...</div>
-    </div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          <div className="text-lg font-medium">Loading...</div>
+        </div>
+      </div>
+    );
   }
   
   if (!user) {

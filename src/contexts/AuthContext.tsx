@@ -75,14 +75,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('hms_user');
       }
     }
-    setIsLoading(false);
+    // Use a slight delay to ensure UI is ready
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
   }, []);
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate API call delay with a slightly longer delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     // Find matching user
     const matchedUser = mockUsers.find(
@@ -95,7 +98,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log(`Logged in as ${role}: ${matchedUser.name}`);
         setUser(matchedUser);
         localStorage.setItem('hms_user', JSON.stringify(matchedUser));
-        setIsLoading(false);
+        // Give a brief moment to allow the UI to update
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 300);
         return true;
       }
     }
