@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
             skipIntroduction();
           }, 4900); // 4.9 seconds
         }
-      }, 600);
+      }, 800); // Increased from 600ms for better visibility
     }
   }, 2000); // Show splash for 2 seconds
   
@@ -41,10 +41,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (introOverlay && introOverlay.classList.contains('show')) {
       introOverlay.classList.remove('show');
       
+      // Add a fade-out class for smoother transition
+      introOverlay.classList.add('fade-out');
+      
       // Remove intro overlay from DOM after transition completes
       setTimeout(() => {
         introOverlay.remove();
-      }, 600);
+      }, 800); // Increased from 600ms for better visibility
     }
   }
 
