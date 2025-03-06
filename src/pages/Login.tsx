@@ -1,116 +1,113 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useToast } from '@/components/ui/use-toast';
-import { EyeIcon, EyeOffIcon, LockKeyholeIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { login, user } = useAuth();
+const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // If already logged in, redirect to home
-  React.useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
+  const { login } = useAuth();
+  const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsLoading(true);
     
-    try {
-      const success = await login(email, password, role);
-      
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
-        navigate('/');
-      } else {
-        toast({
-          title: "Error",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during login",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    const success = await login(email, password, role);
+    
+    setIsLoading(false);
+    if (success) {
+      navigate('/');
     }
   };
   
+  const handleDemoLogin = async (demoRole: 'patient' | 'doctor' | 'admin') => {
+    setIsLoading(true);
+    let demoEmail = '';
+    
+    switch(demoRole) {
+      case 'patient':
+        demoEmail = 'patient@hospital.com';
+        break;
+      case 'doctor':
+        demoEmail = 'doctor@hospital.com';
+        break;
+      case 'admin':
+        demoEmail = 'admin@hospital.com';
+        break;
+    }
+    
+    const success = await login(demoEmail, 'password', demoRole);
+    
+    setIsLoading(false);
+    if (success) {
+      navigate('/');
+    }
+  };
+  
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+  
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 md:p-8">
-      <div className="absolute top-8 flex items-center gap-2">
-        <div className="relative flex h-8 w-8 items-center justify-center rounded-md bg-primary">
-          <span className="font-bold text-white">H</span>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 md:p-0">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="mb-8 text-center">
+          <motion.div 
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 260, 
+              damping: 20, 
+              delay: 0.2 
+            }}
+          >
+            <span className="text-xl font-bold text-white">HC</span>
+          </motion.div>
+          <h1 className="text-2xl font-bold tracking-tight">Hospital Company</h1>
+          <p className="mt-2 text-muted-foreground">Sign in to access the healthcare management system</p>
         </div>
-        <span className="font-semibold">HealthWave HMS</span>
-      </div>
-      
-      <div className="w-full max-w-md animate-fade-in">
+        
         <Card className="border-none shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <LockKeyholeIcon className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardHeader>
+            <CardTitle>Welcome back</CardTitle>
             <CardDescription>
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="role">Login as</Label>
-                <Select
-                  value={role}
+                <Label htmlFor="role">Role</Label>
+                <Select 
+                  value={role} 
                   onValueChange={(value) => setRole(value as 'patient' | 'doctor' | 'admin')}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                  <SelectTrigger id="role" className="w-full">
+                    <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="patient">Patient</SelectItem>
@@ -119,81 +116,96 @@ const Login = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <a 
-                    href="#" 
-                    className="text-xs text-primary hover:underline"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toast({
-                        title: "Password Reset",
-                        description: "This feature is not implemented in the demo.",
-                      });
-                    }}
-                  >
-                    Forgot password?
-                  </a>
-                </div>
                 <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10"
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="absolute right-0 top-0 h-full px-3 py-1 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    size="sm"
+                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                    onClick={togglePasswordVisibility}
                   >
                     {showPassword ? (
-                      <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
-                    <span className="sr-only">
-                      {showPassword ? "Hide password" : "Show password"}
-                    </span>
                   </Button>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                type="submit" 
-                className="w-full" 
+              
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
+                    <span>Logging in...</span>
+                  </div>
+                ) : (
+                  "Sign in"
+                )}
               </Button>
-            </CardFooter>
-          </form>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col">
+            <div className="relative mb-4 w-full">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Quick Access</span>
+              </div>
+            </div>
+            
+            <div className="grid w-full gap-2">
+              <Button variant="outline" onClick={() => handleDemoLogin('patient')}>
+                Login as Patient
+              </Button>
+              <Button variant="outline" onClick={() => handleDemoLogin('doctor')}>
+                Login as Doctor
+              </Button>
+              <Button variant="outline" onClick={() => handleDemoLogin('admin')}>
+                Login as Admin
+              </Button>
+            </div>
+          </CardFooter>
         </Card>
         
-        <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>Demo Credentials:</p>
-          <p>Role: Patient | Email: patient@hospital.com | Password: password</p>
-          <p>Role: Doctor | Email: doctor@hospital.com | Password: password</p>
-          <p>Role: Admin | Email: admin@hospital.com | Password: password</p>
-        </div>
-      </div>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Note: Use "password" as the password for all demo accounts
+        </p>
+      </motion.div>
     </div>
   );
 };
