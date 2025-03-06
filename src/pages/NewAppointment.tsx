@@ -9,12 +9,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format, addDays, addMonths, isBefore, isAfter } from 'date-fns';
-import { CalendarIcon, Clock } from 'lucide-react';
+import { CalendarIcon, Clock, Video, Phone, MessageSquare, Check, ChevronRight } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { motion } from 'framer-motion';
 
 // Sample data
 const appointmentTypes = [
@@ -26,12 +29,12 @@ const appointmentTypes = [
 ];
 
 const doctors = [
-  { id: '1', name: 'Dr. Jane Smith', specialty: 'Cardiology' },
-  { id: '2', name: 'Dr. John Doe', specialty: 'Orthopedics' },
-  { id: '3', name: 'Dr. Emily Chen', specialty: 'Neurology' },
-  { id: '4', name: 'Dr. Michael Brown', specialty: 'Pediatrics' },
-  { id: '5', name: 'Dr. Sarah Johnson', specialty: 'Oncology' },
-  { id: '6', name: 'Dr. Robert Lee', specialty: 'Dermatology' },
+  { id: '1', name: 'Dr. Jane Smith', specialty: 'Cardiology', supportedModes: ['video', 'voice', 'chat', 'in-person'] },
+  { id: '2', name: 'Dr. John Doe', specialty: 'Orthopedics', supportedModes: ['in-person', 'voice'] },
+  { id: '3', name: 'Dr. Emily Chen', specialty: 'Neurology', supportedModes: ['video', 'voice', 'chat', 'in-person'] },
+  { id: '4', name: 'Dr. Michael Brown', specialty: 'Pediatrics', supportedModes: ['in-person'] },
+  { id: '5', name: 'Dr. Sarah Johnson', specialty: 'Oncology', supportedModes: ['video', 'chat', 'in-person'] },
+  { id: '6', name: 'Dr. Robert Lee', specialty: 'Dermatology', supportedModes: ['video', 'voice', 'in-person'] },
 ];
 
 const patients = [
@@ -42,8 +45,16 @@ const patients = [
   { id: 'patient5', name: 'William Taylor', patientId: 'P12349' },
 ];
 
+// Communication mode icons
+const communicationModeIcons = {
+  'in-person': <Check className="h-4 w-4" />,
+  'video': <Video className="h-4 w-4" />,
+  'voice': <Phone className="h-4 w-4" />,
+  'chat': <MessageSquare className="h-4 w-4" />
+};
+
 // Generate time slots based on doctor availability
-const generateTimeSlots = (doctorId: string, selectedDate: Date | undefined) => {
+const generateTimeSlots = (doctorId: string, selectedDate: Date | undefined, mode: string) => {
   // Default time slots
   const defaultSlots = [
     '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
@@ -51,8 +62,25 @@ const generateTimeSlots = (doctorId: string, selectedDate: Date | undefined) => 
     '04:00 PM', '04:30 PM'
   ];
   
-  // In a real app, we would check doctor availability
-  // For now, simulate some unavailable slots for specific doctors
+  // In a real app, we would check doctor availability based on mode
+  const doctor = doctors.find(d => d.id === doctorId);
+  if (!doctor) return [];
+  
+  // Check if doctor supports this mode
+  if (!doctor.supportedModes.includes(mode)) return [];
+  
+  // For virtual modes, offer more slots
+  if (mode === 'chat') {
+    return [
+      ...defaultSlots,
+      '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM'
+    ];
+  } else if (mode === 'video' || mode === 'voice') {
+    // For video/voice, simulate some unavailable slots
+    return defaultSlots.filter((_, index) => index % 2 !== 0);
+  }
+  
+  // For in-person visits
   if (doctorId === '1' && selectedDate && selectedDate.getDay() === 1) {
     // On Mondays, Dr. Jane Smith has fewer slots available
     return defaultSlots.filter((_, index) => index % 3 !== 0);
@@ -83,27 +111,49 @@ const NewAppointment: React.FC = () => {
   const [insuranceType, setInsuranceType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [communicationMode, setCommunicationMode] = useState('in-person');
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   
   // Role-based states
   const isDoctorRole = user?.role === 'doctor';
   const isPatientRole = user?.role === 'patient';
   const isAdminRole = user?.role === 'admin';
 
-  // Update available time slots when doctor or date changes
+  // Update doctor based on chosen communication mode
+  const filteredDoctors = doctors.filter(doctor => 
+    doctor.supportedModes.includes(communicationMode)
+  );
+
+  // Update available time slots when doctor, date or mode changes
   useEffect(() => {
     if (selectedDoctor && selectedDate) {
-      const slots = generateTimeSlots(selectedDoctor, selectedDate);
+      const slots = generateTimeSlots(selectedDoctor, selectedDate, communicationMode);
       setAvailableTimeSlots(slots);
-      setSelectedTime(''); // Reset selected time when doctor/date changes
+      setSelectedTime(''); // Reset selected time when doctor/date/mode changes
     }
-  }, [selectedDoctor, selectedDate]);
+  }, [selectedDoctor, selectedDate, communicationMode]);
+  
+  // Handle file attachment for chat mode
+  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setAttachedFiles(prev => [...prev, ...newFiles]);
+      
+      toast({
+        title: "Files attached",
+        description: `${newFiles.length} file(s) attached for your chat consultation.`,
+      });
+    }
+  };
   
   // Check if all required fields are filled
   const isFormValid = () => {
+    const commonRequirements = selectedType && selectedDate && selectedTime && reason;
+    
     if (isDoctorRole) {
-      return selectedPatient && selectedType && selectedDate && selectedTime && reason;
+      return selectedPatient && commonRequirements;
     } else {
-      return selectedDoctor && selectedType && selectedDate && selectedTime && reason;
+      return selectedDoctor && commonRequirements;
     }
   };
   
@@ -125,7 +175,7 @@ const NewAppointment: React.FC = () => {
     setTimeout(() => {
       toast({
         title: "Appointment Scheduled",
-        description: `Your appointment has been scheduled for ${selectedDate ? format(selectedDate, 'PPP') : ''} at ${selectedTime}.`,
+        description: `Your ${communicationMode} appointment has been scheduled for ${selectedDate ? format(selectedDate, 'PPP') : ''} at ${selectedTime}.`,
       });
       
       setIsSubmitting(false);
@@ -135,10 +185,140 @@ const NewAppointment: React.FC = () => {
   
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Schedule New Appointment</h1>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        <h1 className="text-3xl font-bold tracking-tight mb-6">Schedule New Appointment</h1>
+      </motion.div>
       
       <form onSubmit={handleSubmit}>
         <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Communication Mode</CardTitle>
+              <CardDescription>
+                Choose how you'd like to consult with the doctor
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs 
+                defaultValue="in-person" 
+                value={communicationMode} 
+                onValueChange={setCommunicationMode}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-4 mb-4">
+                  <TabsTrigger value="in-person" className="flex items-center gap-2">
+                    <Check className="h-4 w-4" />
+                    In-Person
+                  </TabsTrigger>
+                  <TabsTrigger value="video" className="flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    Video Call
+                  </TabsTrigger>
+                  <TabsTrigger value="voice" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Voice Call
+                  </TabsTrigger>
+                  <TabsTrigger value="chat" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Chat
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="in-person">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h3 className="font-medium mb-2">In-Person Consultation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Visit the hospital for a face-to-face appointment with the doctor. 
+                      Please arrive 15 minutes before your scheduled time.
+                    </p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="video">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h3 className="font-medium mb-2">Video Call Consultation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Connect with your doctor through a secure video call. You'll need a device with a 
+                      camera and microphone. A link will be sent to your email 10 minutes before the appointment.
+                    </p>
+                    
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-primary/10 rounded-lg text-center">
+                        <p className="text-xs font-medium">Recommended for</p>
+                        <p className="text-sm mt-1">Follow-up visits, visual examinations</p>
+                      </div>
+                      <div className="p-3 bg-primary/10 rounded-lg text-center">
+                        <p className="text-xs font-medium">Requirements</p>
+                        <p className="text-sm mt-1">Camera, microphone, internet</p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="voice">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h3 className="font-medium mb-2">Voice Call Consultation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Speak with your doctor over a phone call. You'll receive a call at your registered 
+                      phone number at the scheduled time.
+                    </p>
+                    
+                    <div className="mt-4 p-3 bg-primary/10 rounded-lg">
+                      <p className="text-xs font-medium mb-1">Ideal for</p>
+                      <p className="text-sm">Quick follow-ups, discussing test results, or when video isn't necessary</p>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="chat">
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h3 className="font-medium mb-2">Chat Consultation</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Text-based consultation with your doctor. Share images or documents related to your condition.
+                    </p>
+                    
+                    <div className="border-2 border-dashed border-border p-3 rounded-lg">
+                      <Label htmlFor="file-upload" className="block text-sm font-medium mb-2">
+                        Attach files (optional)
+                      </Label>
+                      <Input 
+                        id="file-upload" 
+                        type="file" 
+                        multiple
+                        className="mb-3"
+                        onChange={handleFileAttachment}
+                      />
+                      
+                      {attachedFiles.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          <p className="text-xs font-medium">Attached files:</p>
+                          {attachedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between bg-background p-2 rounded-md">
+                              <p className="text-xs truncate">{file.name}</p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setAttachedFiles(attachedFiles.filter((_, i) => i !== index));
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+          
           <Card>
             <CardHeader>
               <CardTitle>Appointment Details</CardTitle>
@@ -155,7 +335,7 @@ const NewAppointment: React.FC = () => {
                     <SelectTrigger id="patient">
                       <SelectValue placeholder="Select patient" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
+                    <SelectContent className="bg-white dark:bg-slate-900">
                       {patients.map(patient => (
                         <SelectItem key={patient.id} value={patient.id}>
                           {patient.name} (ID: {patient.patientId})
@@ -171,14 +351,35 @@ const NewAppointment: React.FC = () => {
                     <SelectTrigger id="doctor">
                       <SelectValue placeholder="Select doctor" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {doctors.map((doctor) => (
-                        <SelectItem key={doctor.id} value={doctor.id}>
-                          {doctor.name} ({doctor.specialty})
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="bg-white dark:bg-slate-900">
+                      {filteredDoctors.length > 0 ? (
+                        filteredDoctors.map((doctor) => (
+                          <SelectItem key={doctor.id} value={doctor.id}>
+                            <div className="flex items-center gap-2">
+                              <span>{doctor.name}</span>
+                              <span className="text-xs text-muted-foreground">({doctor.specialty})</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-sm text-muted-foreground">
+                          No doctors available for {communicationMode} consultations
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
+                  
+                  {selectedDoctor && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <p className="text-xs text-muted-foreground w-full">Available consultation modes:</p>
+                      {doctors.find(d => d.id === selectedDoctor)?.supportedModes.map(mode => (
+                        <div key={mode} className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full text-xs">
+                          {communicationModeIcons[mode as keyof typeof communicationModeIcons]}
+                          <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -189,7 +390,7 @@ const NewAppointment: React.FC = () => {
                   <SelectTrigger id="type">
                     <SelectValue placeholder="Select appointment type" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white dark:bg-slate-900">
                     {appointmentTypes.map((type) => (
                       <SelectItem key={type.id} value={type.id}>
                         {type.name}
@@ -216,7 +417,7 @@ const NewAppointment: React.FC = () => {
                         {selectedDate ? format(selectedDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white">
+                    <PopoverContent className="w-auto p-0 bg-white dark:bg-slate-900">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
@@ -247,7 +448,7 @@ const NewAppointment: React.FC = () => {
                         {selectedTime || "Select time"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 bg-white">
+                    <PopoverContent className="w-48 bg-white dark:bg-slate-900">
                       <div className="grid gap-1">
                         <Label className="mb-2">Available Slots</Label>
                         {!selectedDoctor || !selectedDate ? (
@@ -309,7 +510,7 @@ const NewAppointment: React.FC = () => {
                   <SelectTrigger id="insuranceType">
                     <SelectValue placeholder="Select insurance provider" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white">
+                  <SelectContent className="bg-white dark:bg-slate-900">
                     <SelectItem value="bluecross">Blue Cross Blue Shield</SelectItem>
                     <SelectItem value="aetna">Aetna</SelectItem>
                     <SelectItem value="cigna">Cigna</SelectItem>

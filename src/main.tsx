@@ -11,13 +11,6 @@ const rootElement = document.getElementById("root");
 if (rootElement) {
   const root = createRoot(rootElement);
   
-  // Clear any existing hospital data from localStorage for fresh start
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('hospital_')) {
-      localStorage.removeItem(key);
-    }
-  });
-  
   // Render the app with AnimatePresence for smooth transitions
   root.render(
     <AnimatePresence mode="wait">

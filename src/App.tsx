@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -16,8 +17,10 @@ import MedicalRecords from "./pages/MedicalRecords";
 import Pharmacy from "./pages/Pharmacy";
 import Analytics from "./pages/Analytics";
 import AmbulanceRequest from "./pages/AmbulanceRequest";
+import GetPrediction from "./pages/GetPrediction";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import SplashScreen from "./components/SplashScreen";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient({
@@ -29,6 +32,25 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Main application with splash screen
+const AppWithSplash = () => {
+  const [showSplash, setShowSplash] = useState(true);
+  
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+  
+  return (
+    <>
+      {showSplash ? (
+        <SplashScreen onComplete={handleSplashComplete} />
+      ) : (
+        <AnimatedRoutes />
+      )}
+    </>
+  );
+};
 
 // Animated routes component
 const AnimatedRoutes = () => {
@@ -59,6 +81,7 @@ const AnimatedRoutes = () => {
             <Route path="pharmacy" element={<Pharmacy />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="ambulance-request" element={<AmbulanceRequest />} />
+            <Route path="get-prediction" element={<GetPrediction />} />
           </Route>
           
           {/* Catch-all route */}
@@ -69,39 +92,12 @@ const AnimatedRoutes = () => {
   );
 };
 
-// Protected route component with loading animation
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <motion.div 
-          className="flex flex-col items-center gap-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="h-12 w-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
-          <p className="text-muted-foreground">Loading your profile...</p>
-        </motion.div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <BrowserRouter>
-          <AnimatedRoutes />
+          <AppWithSplash />
         </BrowserRouter>
         <Toaster />
         <Sonner position="top-right" closeButton />
