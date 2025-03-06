@@ -5,6 +5,15 @@ import './index.css'
 
 // First wait for the DOM to be ready
 document.addEventListener('DOMContentLoaded', () => {
+  // Clear all localStorage data to restart the system
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('hms_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  
+  console.log('HMS system restarted: All data cleared');
+
   // Create a timeout for the splash screen
   setTimeout(() => {
     const splashScreen = document.getElementById('splash-screen');

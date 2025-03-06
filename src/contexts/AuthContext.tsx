@@ -28,30 +28,22 @@ export const useAuth = () => {
   return context;
 };
 
-// Mock user data for demonstration
-const mockUsers = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'patient@hospital.com',
-    role: 'patient' as UserRole,
+// Generate a new user based on login info (instead of using predefined mock users)
+const generateNewUser = (email: string, role: UserRole): User => {
+  // Create display name from email
+  const nameFromEmail = email.split('@')[0].split('.');
+  const formattedName = nameFromEmail.map(part => 
+    part.charAt(0).toUpperCase() + part.slice(1)
+  ).join(' ');
+  
+  return {
+    id: `${role}-${Date.now().toString(36)}`,
+    name: formattedName,
+    email: email,
+    role: role,
     avatar: '',
-  },
-  {
-    id: '2',
-    name: 'Dr. Jane Smith',
-    email: 'doctor@hospital.com',
-    role: 'doctor' as UserRole,
-    avatar: '',
-  },
-  {
-    id: '3',
-    name: 'Admin User',
-    email: 'admin@hospital.com',
-    role: 'admin' as UserRole,
-    avatar: '',
-  },
-];
+  };
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -87,23 +79,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate API call delay with a slightly longer delay for better UX
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Find matching user
-    const matchedUser = mockUsers.find(
-      (u) => u.email === email && u.role === role
-    );
-    
-    if (matchedUser) {
-      // In a real app, you would verify the password here
-      if (password === 'password') {
-        console.log(`Logged in as ${role}: ${matchedUser.name}`);
-        setUser(matchedUser);
-        localStorage.setItem('hms_user', JSON.stringify(matchedUser));
-        // Give a brief moment to allow the UI to update
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 300);
-        return true;
+    // Simple validation - in a real app this would check against a database
+    if (password === 'password') {
+      const newUser = generateNewUser(email, role);
+      console.log(`Generated new user: ${newUser.name} as ${role}`);
+      setUser(newUser);
+      localStorage.setItem('hms_user', JSON.stringify(newUser));
+      
+      // Generate initial data for this user in localStorage
+      if (role === 'admin') {
+        localStorage.setItem('hms_invoices', JSON.stringify([]));
+        localStorage.setItem('hms_appointments', JSON.stringify([]));
+        localStorage.setItem('hms_patients', JSON.stringify([]));
+        localStorage.setItem('hms_doctors', JSON.stringify([]));
       }
+      
+      // Give a brief moment to allow the UI to update
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+      return true;
     }
     
     setIsLoading(false);
@@ -113,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hms_user');
+    // Don't clear other localStorage items to simulate data persistence
   };
 
   return (
