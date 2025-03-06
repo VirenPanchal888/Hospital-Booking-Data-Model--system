@@ -1,6 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { toast } from '@/components/ui/use-toast';
 
 type UserRole = 'patient' | 'doctor' | 'admin';
 
@@ -29,22 +28,30 @@ export const useAuth = () => {
   return context;
 };
 
-// Generate a new user based on login info
-const generateNewUser = (email: string, role: UserRole): User => {
-  // Create display name from email
-  const nameFromEmail = email.split('@')[0].split('.');
-  const formattedName = nameFromEmail.map(part => 
-    part.charAt(0).toUpperCase() + part.slice(1)
-  ).join(' ');
-  
-  return {
-    id: `${role}-${Date.now().toString(36)}`,
-    name: formattedName,
-    email: email,
-    role: role,
+// Mock user data for demonstration
+const mockUsers = [
+  {
+    id: '1',
+    name: 'John Doe',
+    email: 'patient@hospital.com',
+    role: 'patient' as UserRole,
     avatar: '',
-  };
-};
+  },
+  {
+    id: '2',
+    name: 'Dr. Jane Smith',
+    email: 'doctor@hospital.com',
+    role: 'doctor' as UserRole,
+    avatar: '',
+  },
+  {
+    id: '3',
+    name: 'Admin User',
+    email: 'admin@hospital.com',
+    role: 'admin' as UserRole,
+    avatar: '',
+  },
+];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -60,72 +67,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!['patient', 'doctor', 'admin'].includes(parsedUser.role)) {
           console.error('Invalid user role detected:', parsedUser.role);
           localStorage.removeItem('hms_user');
-          toast({
-            title: "Invalid user role",
-            description: "Your login session was invalid. Please login again.",
-            variant: "destructive"
-          });
         } else {
           setUser(parsedUser);
-          toast({
-            title: "Welcome back",
-            description: `Logged in as ${parsedUser.name}`,
-          });
         }
       } catch (error) {
         console.error('Error parsing stored user:', error);
         localStorage.removeItem('hms_user');
-        toast({
-          title: "Session error",
-          description: "There was an error with your session. Please login again.",
-          variant: "destructive"
-        });
       }
     }
-    // Use a slight delay to ensure UI is ready
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call delay with a slightly longer delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simple validation - in a real app this would check against a database
-    if (password === 'password') {
-      const newUser = generateNewUser(email, role);
-      console.log(`Generated new user: ${newUser.name} as ${role}`);
-      setUser(newUser);
-      localStorage.setItem('hms_user', JSON.stringify(newUser));
-      
-      // Generate initial data for this user in localStorage
-      if (role === 'admin') {
-        localStorage.setItem('hms_invoices', JSON.stringify([]));
-        localStorage.setItem('hms_appointments', JSON.stringify([]));
-        localStorage.setItem('hms_patients', JSON.stringify([]));
-        localStorage.setItem('hms_doctors', JSON.stringify([]));
-      }
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome, ${newUser.name}!`,
-      });
-      
-      // Give a brief moment to allow the UI to update
-      setTimeout(() => {
+    // Find matching user
+    const matchedUser = mockUsers.find(
+      (u) => u.email === email && u.role === role
+    );
+    
+    if (matchedUser) {
+      // In a real app, you would verify the password here
+      if (password === 'password') {
+        console.log(`Logged in as ${role}: ${matchedUser.name}`);
+        setUser(matchedUser);
+        localStorage.setItem('hms_user', JSON.stringify(matchedUser));
         setIsLoading(false);
-      }, 300);
-      return true;
+        return true;
+      }
     }
-    
-    toast({
-      title: "Login failed",
-      description: "Invalid email or password. Try using 'password' as the password.",
-      variant: "destructive"
-    });
     
     setIsLoading(false);
     return false;
@@ -134,10 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hms_user');
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
   };
 
   return (

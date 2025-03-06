@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   ArrowDown, 
   ArrowUp, 
@@ -9,6 +9,7 @@ import {
   FilePlus, 
   Filter, 
   MoreHorizontal, 
+  PlusCircle, 
   Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,8 +36,90 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { useToast } from '@/hooks/use-toast';
-import NewInvoiceModal, { Invoice } from '@/components/billing/NewInvoiceModal';
+
+interface Invoice {
+  id: string;
+  patientName: string;
+  patientId: string;
+  date: string;
+  dueDate: string;
+  amount: number;
+  status: 'paid' | 'pending' | 'overdue';
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+}
+
+// Sample data for invoices
+const invoicesData: Invoice[] = [
+  {
+    id: "INV-2023-001",
+    patientName: "Olivia Wilson",
+    patientId: "P12345",
+    date: "2023-03-01",
+    dueDate: "2023-03-15",
+    amount: 150.00,
+    status: "paid",
+    items: [
+      { name: "Consultation Fee", quantity: 1, price: 100.00 },
+      { name: "Blood Test", quantity: 1, price: 50.00 }
+    ]
+  },
+  {
+    id: "INV-2023-002",
+    patientName: "James Smith",
+    patientId: "P12346",
+    date: "2023-03-05",
+    dueDate: "2023-03-19",
+    amount: 275.50,
+    status: "pending",
+    items: [
+      { name: "MRI Scan", quantity: 1, price: 200.00 },
+      { name: "Consultation Fee", quantity: 1, price: 75.50 }
+    ]
+  },
+  {
+    id: "INV-2023-003",
+    patientName: "Emma Johnson",
+    patientId: "P12347",
+    date: "2023-02-20",
+    dueDate: "2023-03-06",
+    amount: 85.00,
+    status: "overdue",
+    items: [
+      { name: "Vaccination", quantity: 1, price: 45.00 },
+      { name: "Follow-up Visit", quantity: 1, price: 40.00 }
+    ]
+  },
+  {
+    id: "INV-2023-004",
+    patientName: "William Brown",
+    patientId: "P12348",
+    date: "2023-03-10",
+    dueDate: "2023-03-24",
+    amount: 320.75,
+    status: "pending",
+    items: [
+      { name: "X-Ray", quantity: 1, price: 150.00 },
+      { name: "Splint Application", quantity: 1, price: 85.75 },
+      { name: "Pain Medication", quantity: 1, price: 85.00 }
+    ]
+  },
+  {
+    id: "INV-2023-005",
+    patientName: "Sophia Davis",
+    patientId: "P12349",
+    date: "2023-03-12",
+    dueDate: "2023-03-26",
+    amount: 90.00,
+    status: "paid",
+    items: [
+      { name: "Dermatology Consultation", quantity: 1, price: 90.00 }
+    ]
+  },
+];
 
 const getStatusBadge = (status: Invoice['status']) => {
   switch (status) {
@@ -52,29 +135,8 @@ const getStatusBadge = (status: Invoice['status']) => {
 };
 
 const Billing = () => {
-  const { toast } = useToast();
-  const [invoicesData, setInvoicesData] = useState<Invoice[]>([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewInvoiceModalOpen, setIsNewInvoiceModalOpen] = useState(false);
-  
-  // Load invoices from localStorage on mount
-  useEffect(() => {
-    const storedInvoices = localStorage.getItem('hms_invoices');
-    if (storedInvoices) {
-      try {
-        const parsedInvoices = JSON.parse(storedInvoices);
-        setInvoicesData(parsedInvoices);
-      } catch (error) {
-        console.error('Error parsing invoices from localStorage:', error);
-        // Initialize with empty array if parsing fails
-        localStorage.setItem('hms_invoices', JSON.stringify([]));
-      }
-    } else {
-      // Initialize empty array if no invoices exist yet
-      localStorage.setItem('hms_invoices', JSON.stringify([]));
-    }
-  }, []);
   
   // Filter invoices based on tab and search term
   const filteredInvoices = invoicesData
@@ -99,42 +161,6 @@ const Billing = () => {
     .filter(invoice => invoice.status === 'overdue')
     .reduce((sum, invoice) => sum + invoice.amount, 0);
   
-  // Handle creating a new invoice
-  const handleSaveInvoice = (invoice: Invoice) => {
-    const updatedInvoices = [...invoicesData, invoice];
-    setInvoicesData(updatedInvoices);
-    localStorage.setItem('hms_invoices', JSON.stringify(updatedInvoices));
-  };
-
-  // Handle changing invoice status
-  const handleChangeStatus = (invoiceId: string, newStatus: Invoice['status']) => {
-    const updatedInvoices = invoicesData.map(invoice => 
-      invoice.id === invoiceId 
-        ? { ...invoice, status: newStatus } 
-        : invoice
-    );
-    
-    setInvoicesData(updatedInvoices);
-    localStorage.setItem('hms_invoices', JSON.stringify(updatedInvoices));
-    
-    toast({
-      title: "Status updated",
-      description: `Invoice ${invoiceId} marked as ${newStatus}`,
-    });
-  };
-
-  // Handle deleting an invoice
-  const handleDeleteInvoice = (invoiceId: string) => {
-    const updatedInvoices = invoicesData.filter(invoice => invoice.id !== invoiceId);
-    setInvoicesData(updatedInvoices);
-    localStorage.setItem('hms_invoices', JSON.stringify(updatedInvoices));
-    
-    toast({
-      title: "Invoice deleted",
-      description: `Invoice ${invoiceId} has been deleted`,
-    });
-  };
-  
   return (
     <div className="animate-slide-in-up">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -155,7 +181,7 @@ const Billing = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button className="gap-1" onClick={() => setIsNewInvoiceModalOpen(true)}>
+          <Button className="gap-1">
             <FilePlus className="h-4 w-4" />
             <span>New Invoice</span>
           </Button>
@@ -248,13 +274,6 @@ const Billing = () => {
                             <p className="text-sm text-muted-foreground">
                               Try changing your filters or create a new invoice.
                             </p>
-                            <Button
-                              className="mt-4 gap-1" 
-                              onClick={() => setIsNewInvoiceModalOpen(true)}
-                            >
-                              <FilePlus className="h-4 w-4" />
-                              Create Invoice
-                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -284,31 +303,14 @@ const Billing = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem>View Details</DropdownMenuItem>
-                                {invoice.status !== 'paid' && (
-                                  <DropdownMenuItem onClick={() => handleChangeStatus(invoice.id, 'paid')}>
-                                    Mark as Paid
-                                  </DropdownMenuItem>
-                                )}
-                                {invoice.status !== 'pending' && (
-                                  <DropdownMenuItem onClick={() => handleChangeStatus(invoice.id, 'pending')}>
-                                    Mark as Pending
-                                  </DropdownMenuItem>
-                                )}
-                                {invoice.status !== 'overdue' && (
-                                  <DropdownMenuItem onClick={() => handleChangeStatus(invoice.id, 'overdue')}>
-                                    Mark as Overdue
-                                  </DropdownMenuItem>
-                                )}
+                                <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
                                 <DropdownMenuItem>
                                   <Download className="mr-2 h-4 w-4" />
                                   Download PDF
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>Send Reminder</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  className="text-red-600"
-                                  onClick={() => handleDeleteInvoice(invoice.id)}
-                                >
+                                <DropdownMenuItem className="text-red-600">
                                   Delete Invoice
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -337,12 +339,6 @@ const Billing = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <NewInvoiceModal
-        open={isNewInvoiceModalOpen}
-        onOpenChange={setIsNewInvoiceModalOpen}
-        onSave={handleSaveInvoice}
-      />
     </div>
   );
 };

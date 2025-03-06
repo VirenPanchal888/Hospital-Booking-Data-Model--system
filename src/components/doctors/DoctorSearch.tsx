@@ -1,10 +1,8 @@
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Search, User, X } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { debounce } from 'lodash';
-import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface Doctor {
   id: string;
@@ -27,29 +25,29 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   
-  // Optimize filtering with useMemo for instant results
-  const getFilteredDoctors = useMemo(() => {
-    if (searchTerm.length < 2) return [];
-    
-    return doctors.filter(doctor =>
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm, doctors]);
-  
-  // Debounce search with increased timeout for better UX
+  // Optimize search with debounce
   const debouncedSearch = useCallback(
-    debounce(() => {
-      setFilteredDoctors(getFilteredDoctors);
-    }, 300),
-    [getFilteredDoctors]
+    debounce((term: string) => {
+      if (term.length < 2) {
+        setFilteredDoctors([]);
+        return;
+      }
+
+      const results = doctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(term.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(term.toLowerCase())
+      );
+      
+      setFilteredDoctors(results);
+    }, 150), // Lower debounce time for faster response
+    [doctors]
   );
 
   useEffect(() => {
-    debouncedSearch();
+    debouncedSearch(searchTerm);
     
+    // Show dropdown immediately if we have a valid search term
     if (searchTerm.length >= 2) {
       setShowDropdown(true);
     } else {
@@ -61,14 +59,10 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
     };
   }, [searchTerm, debouncedSearch]);
 
-  // Handle click outside to close dropdown with a delay
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        // Add delay before closing for better UX
-        setTimeout(() => {
-          setShowDropdown(false);
-        }, 150);
+        setShowDropdown(false);
       }
     };
 
@@ -85,91 +79,45 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({
   const handleSelectDoctor = (doctor: Doctor) => {
     onSelectDoctor(doctor);
     setSearchTerm('');
-    
-    // Close dropdown with a slight delay
-    setTimeout(() => {
-      setShowDropdown(false);
-    }, 100);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm('');
-    inputRef.current?.focus();
+    setShowDropdown(false);
   };
 
   return (
     <div className="relative w-full" ref={searchRef}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-pulse-soft" />
         <Input
-          ref={inputRef}
           type="search"
           placeholder={placeholder}
-          className="pl-8 pr-10 transition-all duration-300 focus:ring-primary/20 hover:border-primary/30"
+          className="pl-8 pr-4 transition-all duration-200 focus:ring-primary/20 hover:border-primary/30"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
-          autoComplete="off"
         />
-        {searchTerm && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1 h-8 w-8 opacity-70 hover:opacity-100"
-            onClick={clearSearch}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Clear search</span>
-          </Button>
-        )}
       </div>
 
-      <AnimatePresence>
-        {showDropdown && filteredDoctors.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0, transition: { duration: 0.2 } }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute z-[9999] mt-1 w-full rounded-md border bg-white shadow-lg"
-          >
-            <ul className="py-1 text-sm max-h-60 overflow-auto">
-              {filteredDoctors.map((doctor) => (
-                <motion.li
-                  key={doctor.id}
-                  className="cursor-pointer px-4 py-3 hover:bg-muted transition-colors duration-300 hover:translate-x-1"
-                  onClick={() => handleSelectDoctor(doctor)}
-                  whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
-                >
-                  <div className="flex items-center">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary mr-2">
-                      {doctor.name.charAt(0)}
-                    </span>
-                    <div>
-                      <div className="font-medium">{doctor.name}</div>
-                      <div className="text-xs text-muted-foreground">{doctor.specialty}</div>
-                    </div>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
+      {showDropdown && filteredDoctors.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background shadow-lg animate-in fade-in-20 zoom-in-95 duration-100">
+          <ul className="py-1 text-sm max-h-60 overflow-auto">
+            {filteredDoctors.map((doctor) => (
+              <li
+                key={doctor.id}
+                className="cursor-pointer px-3 py-2 hover:bg-muted transition-colors duration-100 hover:translate-x-1"
+                onClick={() => handleSelectDoctor(doctor)}
+              >
+                <div className="font-medium">{doctor.name}</div>
+                <div className="text-xs text-muted-foreground">{doctor.specialty}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-        {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
-            transition={{ duration: 0.3 }}
-            className="absolute z-[9999] mt-1 w-full rounded-md border bg-white p-4 shadow-lg text-center"
-          >
-            <User className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">No doctors found</p>
-            <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showDropdown && searchTerm.length >= 2 && filteredDoctors.length === 0 && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-background p-2 shadow-lg text-center text-sm text-muted-foreground animate-in fade-in-20 zoom-in-95 duration-100">
+          No doctors found
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -14,8 +15,7 @@ import {
   User,
   UserRound,
   Users,
-  Wallet,
-  Brain
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,12 +99,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
       roles: ['doctor', 'admin'],
     },
     {
-      title: "Health Prediction",
-      href: "/get-prediction",
-      icon: <Brain className="h-5 w-5" />,
-      roles: ['patient'],
-    },
-    {
       title: "Emergency Ambulance",
       href: "/ambulance-request",
       icon: <Ambulance className="h-5 w-5" />,
@@ -119,6 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
     },
   ];
 
+  // Enhanced filtering based on the current user role
   const filteredMainNavItems = mainNavItems.filter(item => 
     item.roles.includes(userRole)
   );
@@ -138,6 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'patient' }) => {
     navigate("/login");
   };
   
+  // Role-specific sidebar titles
   const getSidebarTitle = () => {
     switch(userRole) {
       case 'doctor':
