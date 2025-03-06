@@ -1,14 +1,37 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
+
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    y: 20
+  },
+  in: {
+    opacity: 1,
+    y: 0
+  },
+  out: {
+    opacity: 0,
+    y: -20
+  }
+};
+
+const pageTransition = {
+  type: 'tween',
+  ease: 'anticipate',
+  duration: 0.5
+};
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   
@@ -38,6 +61,13 @@ const Layout: React.FC = () => {
     // Clean up
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
   
   if (isLoading) {
     return (
@@ -55,9 +85,17 @@ const Layout: React.FC = () => {
         <Sidebar isOpen={sidebarOpen} userRole={user?.role} />
         
         <main className="flex-1 md:ml-64 transition-all duration-500 ease-in-out">
-          <div className="container mx-auto p-4 md:p-6 lg:p-8 animate-fade-in">
+          <motion.div
+            key={location.pathname}
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+            className="container mx-auto p-4 md:p-6 lg:p-8"
+          >
             <Outlet />
-          </div>
+          </motion.div>
         </main>
       </div>
       

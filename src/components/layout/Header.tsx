@@ -29,10 +29,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </Button>
         
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="relative flex h-7 w-7 items-center justify-center rounded-md bg-primary transition-all duration-300 group-hover:scale-105">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-md bg-primary transition-all duration-300 group-hover:scale-105">
             <span className="font-bold text-white">H</span>
           </div>
-          <span className="font-semibold hidden md:inline-block transition-colors duration-300">HealthWave HMS</span>
+          <span className="font-semibold hidden md:inline-block transition-colors duration-300">Hospital Company</span>
         </Link>
       </div>
       

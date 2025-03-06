@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
@@ -30,7 +31,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Protected route component
+// Protected route component with enhanced loading animation
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   
@@ -39,7 +40,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="h-12 w-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-          <div className="text-lg font-medium">Loading...</div>
+          <div className="text-lg font-medium">Loading your experience...</div>
         </div>
       </div>
     );
@@ -55,35 +56,37 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Auth routes */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Protected routes */}
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Dashboard />} />
-          <Route path="patients" element={<Patients />} />
-          <Route path="doctors" element={<Doctors />} />
-          <Route path="appointments" element={<Appointments />} />
-          <Route path="new-appointment" element={<NewAppointment />} />
-          <Route path="billing" element={<Billing />} />
-          <Route path="medical-records" element={<MedicalRecords />} />
-          <Route path="pharmacy" element={<Pharmacy />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="ambulance-request" element={<AmbulanceRequest />} />
-          <Route path="get-prediction" element={<GetPrediction />} />
-        </Route>
-        
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes>
+          {/* Auth routes */}
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected routes */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="patients" element={<Patients />} />
+            <Route path="doctors" element={<Doctors />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="new-appointment" element={<NewAppointment />} />
+            <Route path="billing" element={<Billing />} />
+            <Route path="medical-records" element={<MedicalRecords />} />
+            <Route path="pharmacy" element={<Pharmacy />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="ambulance-request" element={<AmbulanceRequest />} />
+            <Route path="get-prediction" element={<GetPrediction />} />
+          </Route>
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AnimatePresence>
     </BrowserRouter>
   );
 };
