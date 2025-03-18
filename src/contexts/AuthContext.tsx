@@ -2,9 +2,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 
-type UserRole = 'patient' | 'doctor' | 'admin';
+// Enhanced user role types
+export type UserRole = 'patient' | 'doctor' | 'nurse' | 'admin' | 'receptionist' | 'pharmacist' | 'lab_technician' | 'finance';
 
-interface User {
+// Enhanced user interface with more details
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -13,6 +15,13 @@ interface User {
   lastLogin?: string;
   department?: string;
   specialization?: string;
+  patientId?: string;
+  staffId?: string;
+  contactNumber?: string;
+  address?: string;
+  emergencyContact?: string;
+  dateJoined?: string;
+  permissions?: string[];
 }
 
 interface AuthContextType {
@@ -33,7 +42,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Enhanced mock user data
+// Enhanced mock user data with more roles and details
 const mockUsers: User[] = [
   {
     id: '1',
@@ -42,7 +51,12 @@ const mockUsers: User[] = [
     role: 'patient',
     avatar: '',
     lastLogin: new Date().toISOString(),
-    department: 'General Medicine'
+    department: 'General Medicine',
+    patientId: 'PAT-001',
+    contactNumber: '+1 (555) 123-4567',
+    address: '123 Main St, Anytown, AN 12345',
+    emergencyContact: '+1 (555) 987-6543',
+    dateJoined: '2023-01-15'
   },
   {
     id: '2',
@@ -52,7 +66,12 @@ const mockUsers: User[] = [
     avatar: '',
     lastLogin: new Date().toISOString(),
     department: 'Cardiology',
-    specialization: 'Cardiac Surgery'
+    specialization: 'Cardiac Surgery',
+    staffId: 'DOC-001',
+    contactNumber: '+1 (555) 234-5678',
+    address: '456 Oak Ave, Anytown, AN 12345',
+    dateJoined: '2022-03-10',
+    permissions: ['view_patients', 'edit_patients', 'prescribe_medications']
   },
   {
     id: '3',
@@ -61,8 +80,77 @@ const mockUsers: User[] = [
     role: 'admin',
     avatar: '',
     lastLogin: new Date().toISOString(),
-    department: 'Administration'
+    department: 'Administration',
+    staffId: 'ADM-001',
+    contactNumber: '+1 (555) 345-6789',
+    dateJoined: '2021-05-20',
+    permissions: ['all']
   },
+  {
+    id: '4',
+    name: 'Nancy White',
+    email: 'nurse@hospital.com',
+    role: 'nurse',
+    avatar: '',
+    lastLogin: new Date().toISOString(),
+    department: 'Emergency',
+    staffId: 'NUR-001',
+    contactNumber: '+1 (555) 456-7890',
+    dateJoined: '2022-07-15',
+    permissions: ['view_patients', 'update_vitals', 'administer_medications']
+  },
+  {
+    id: '5',
+    name: 'Rebecca Johnson',
+    email: 'receptionist@hospital.com',
+    role: 'receptionist',
+    avatar: '',
+    lastLogin: new Date().toISOString(),
+    department: 'Front Desk',
+    staffId: 'REC-001',
+    contactNumber: '+1 (555) 567-8901',
+    dateJoined: '2023-02-01',
+    permissions: ['schedule_appointments', 'register_patients']
+  },
+  {
+    id: '6',
+    name: 'Peter Chen',
+    email: 'pharmacist@hospital.com',
+    role: 'pharmacist',
+    avatar: '',
+    lastLogin: new Date().toISOString(),
+    department: 'Pharmacy',
+    staffId: 'PHA-001',
+    contactNumber: '+1 (555) 678-9012',
+    dateJoined: '2022-09-05',
+    permissions: ['dispense_medications', 'manage_inventory']
+  },
+  {
+    id: '7',
+    name: 'Melissa Garcia',
+    email: 'lab@hospital.com',
+    role: 'lab_technician',
+    avatar: '',
+    lastLogin: new Date().toISOString(),
+    department: 'Laboratory',
+    staffId: 'LAB-001',
+    contactNumber: '+1 (555) 789-0123',
+    dateJoined: '2022-11-10',
+    permissions: ['run_tests', 'enter_results']
+  },
+  {
+    id: '8',
+    name: 'Frank Turner',
+    email: 'finance@hospital.com',
+    role: 'finance',
+    avatar: '',
+    lastLogin: new Date().toISOString(),
+    department: 'Finance',
+    staffId: 'FIN-001',
+    contactNumber: '+1 (555) 890-1234',
+    dateJoined: '2021-10-15',
+    permissions: ['manage_billing', 'process_payments', 'generate_reports']
+  }
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -76,7 +164,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsedUser = JSON.parse(storedUser);
         // Ensure the role is valid
-        if (!['patient', 'doctor', 'admin'].includes(parsedUser.role)) {
+        const validRoles = ['patient', 'doctor', 'nurse', 'admin', 'receptionist', 'pharmacist', 'lab_technician', 'finance'];
+        if (!validRoles.includes(parsedUser.role)) {
           console.error('Invalid user role detected:', parsedUser.role);
           localStorage.removeItem('hospital_user');
         } else {

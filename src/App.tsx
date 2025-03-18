@@ -9,19 +9,43 @@ import { useState, useEffect } from "react";
 import Layout from "./components/layout/Layout";
 import Dashboard from "./pages/Dashboard";
 import Patients from "./pages/Patients";
+import PatientDetails from "./pages/PatientDetails";
 import Doctors from "./pages/Doctors";
+import DoctorDetails from "./pages/DoctorDetails";
 import Appointments from "./pages/Appointments";
 import NewAppointment from "./pages/NewAppointment";
 import Billing from "./pages/Billing";
+import Invoices from "./pages/Invoices";
+import InvoiceDetails from "./pages/InvoiceDetails";
+import PaymentProcessing from "./pages/PaymentProcessing";
+import InsuranceClaims from "./pages/InsuranceClaims";
 import MedicalRecords from "./pages/MedicalRecords";
+import PatientHistory from "./pages/PatientHistory";
+import LabResults from "./pages/LabResults";
+import Prescriptions from "./pages/Prescriptions";
 import Pharmacy from "./pages/Pharmacy";
+import Inventory from "./pages/Inventory";
+import MedicationRequest from "./pages/MedicationRequest";
 import Analytics from "./pages/Analytics";
+import ReportBuilder from "./pages/ReportBuilder";
+import PerformanceMetrics from "./pages/PerformanceMetrics";
+import StaffScheduling from "./pages/StaffScheduling";
 import AmbulanceRequest from "./pages/AmbulanceRequest";
+import AmbulanceTracking from "./pages/AmbulanceTracking";
+import EmergencyServices from "./pages/EmergencyServices";
 import GetPrediction from "./pages/GetPrediction";
+import PatientMonitoring from "./pages/PatientMonitoring";
+import Telemedicine from "./pages/Telemedicine";
+import UserProfile from "./pages/UserProfile";
+import Settings from "./pages/Settings";
+import Notifications from "./pages/Notifications";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
 import { AuthProvider } from "./contexts/AuthContext";
+import RequireAuth from "./components/auth/RequireAuth";
 
 // Create Query Client with optimized settings
 const queryClient = new QueryClient({
@@ -78,20 +102,67 @@ const AnimatedRoutes = () => {
         <Routes location={location}>
           {/* Auth routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           
           {/* Protected routes */}
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={
+            <RequireAuth>
+              <Layout />
+            </RequireAuth>
+          }>
             <Route index element={<Dashboard />} />
+            
+            {/* Patient management */}
             <Route path="patients" element={<Patients />} />
+            <Route path="patients/:id" element={<PatientDetails />} />
+            <Route path="patient-history/:id" element={<PatientHistory />} />
+            <Route path="patient-monitoring" element={<PatientMonitoring />} />
+            
+            {/* Doctor management */}
             <Route path="doctors" element={<Doctors />} />
+            <Route path="doctors/:id" element={<DoctorDetails />} />
+            <Route path="staff-scheduling" element={<StaffScheduling />} />
+            
+            {/* Appointment management */}
             <Route path="appointments" element={<Appointments />} />
             <Route path="new-appointment" element={<NewAppointment />} />
+            <Route path="telemedicine" element={<Telemedicine />} />
+            
+            {/* Billing and finances */}
             <Route path="billing" element={<Billing />} />
+            <Route path="invoices" element={<Invoices />} />
+            <Route path="invoices/:id" element={<InvoiceDetails />} />
+            <Route path="payment-processing" element={<PaymentProcessing />} />
+            <Route path="insurance-claims" element={<InsuranceClaims />} />
+            
+            {/* Medical records */}
             <Route path="medical-records" element={<MedicalRecords />} />
+            <Route path="lab-results" element={<LabResults />} />
+            <Route path="prescriptions" element={<Prescriptions />} />
+            
+            {/* Pharmacy and inventory */}
             <Route path="pharmacy" element={<Pharmacy />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="medication-request" element={<MedicationRequest />} />
+            
+            {/* Analytics and reporting */}
             <Route path="analytics" element={<Analytics />} />
+            <Route path="report-builder" element={<ReportBuilder />} />
+            <Route path="performance-metrics" element={<PerformanceMetrics />} />
+            
+            {/* Emergency services */}
             <Route path="ambulance-request" element={<AmbulanceRequest />} />
+            <Route path="ambulance-tracking" element={<AmbulanceTracking />} />
+            <Route path="emergency-services" element={<EmergencyServices />} />
+            
+            {/* AI and predictions */}
             <Route path="get-prediction" element={<GetPrediction />} />
+            
+            {/* User profile and settings */}
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="notifications" element={<Notifications />} />
           </Route>
           
           {/* Catch-all route */}
