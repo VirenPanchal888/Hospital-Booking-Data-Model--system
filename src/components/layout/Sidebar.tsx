@@ -4,7 +4,9 @@ import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Users, UserCog, Calendar, PlusCircle, 
   Receipt, FileText, PillIcon, BarChart3, Ambulance,
-  LogOut, Brain, Settings, Moon, Sun, ThermometerIcon
+  LogOut, Brain, Settings, Moon, Sun, ThermometerIcon,
+  Database, Flask, ClipboardList, Stethoscope, UserPlus,
+  HeartPulse, List, Activity, ScrollText, Building2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -150,12 +152,39 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             />
           )}
           
+          {showLink(['admin', 'doctor', 'nurse']) && (
+            <SidebarLink 
+              href="/patient-referrals"
+              icon={<UserPlus className="h-4 w-4" />}
+              label="Referrals"
+              isActive={isActive('/patient-referrals')}
+            />
+          )}
+          
+          {showLink(['admin', 'doctor', 'nurse']) && (
+            <SidebarLink 
+              href="/treatment-plans"
+              icon={<ClipboardList className="h-4 w-4" />}
+              label="Treatment Plans"
+              isActive={isActive('/treatment-plans')}
+            />
+          )}
+          
           {showLink(['admin', 'patient']) && (
             <SidebarLink 
               href="/doctors"
               icon={<UserCog className="h-4 w-4" />}
               label="Doctors"
               isActive={isActive('/doctors')}
+            />
+          )}
+          
+          {showLink(['admin', 'doctor', 'nurse', 'executive']) && (
+            <SidebarLink 
+              href="/staff-directory"
+              icon={<Building2 className="h-4 w-4" />}
+              label="Staff Directory"
+              isActive={isActive('/staff-directory')}
             />
           )}
           
@@ -172,6 +201,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             label="New Appointment"
             isActive={isActive('/new-appointment')}
           />
+          
+          {showLink(['admin', 'nurse']) && (
+            <SidebarLink 
+              href="/nursing-tasks"
+              icon={<List className="h-4 w-4" />}
+              label="Nursing Tasks"
+              isActive={isActive('/nursing-tasks')}
+            />
+          )}
+          
+          {showLink(['admin', 'doctor', 'nurse']) && (
+            <SidebarLink 
+              href="/medical-tests"
+              icon={<Flask className="h-4 w-4" />}
+              label="Medical Tests"
+              isActive={isActive('/medical-tests')}
+            />
+          )}
+          
+          {showLink(['admin', 'doctor', 'nurse']) && (
+            <SidebarLink 
+              href="/patient-monitoring"
+              icon={<Activity className="h-4 w-4" />}
+              label="Patient Monitoring"
+              isActive={isActive('/patient-monitoring')}
+            />
+          )}
           
           {showLink(['admin', 'finance', 'patient']) && (
             <SidebarLink 
@@ -212,6 +268,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             label="Ambulance"
             isActive={isActive('/ambulance-request')}
           />
+          
+          {showLink(['admin', 'doctor', 'executive']) && (
+            <SidebarLink 
+              href="/database-management"
+              icon={<Database className="h-4 w-4" />}
+              label="Database"
+              isActive={isActive('/database-management')}
+            />
+          )}
           
           <SidebarLink 
             href="/get-prediction"

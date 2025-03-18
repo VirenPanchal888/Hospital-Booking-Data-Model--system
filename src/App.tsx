@@ -47,6 +47,15 @@ import SplashScreen from "./components/SplashScreen";
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
 
+// New page imports
+import PatientVitals from "./pages/PatientVitals";
+import DatabaseManagement from "./pages/DatabaseManagement";
+import MedicalTests from "./pages/MedicalTests";
+import TreatmentPlans from "./pages/TreatmentPlans";
+import NursingTasks from "./pages/NursingTasks";
+import StaffDirectory from "./pages/StaffDirectory";
+import PatientReferrals from "./pages/PatientReferrals";
+
 // Create Query Client with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -118,11 +127,14 @@ const AnimatedRoutes = () => {
             <Route path="patients/:id" element={<PatientDetails />} />
             <Route path="patient-history/:id" element={<PatientHistory />} />
             <Route path="patient-monitoring" element={<PatientMonitoring />} />
+            <Route path="patient-vitals/:id" element={<PatientVitals />} />
+            <Route path="patient-referrals" element={<PatientReferrals />} />
             
             {/* Doctor management */}
             <Route path="doctors" element={<Doctors />} />
             <Route path="doctors/:id" element={<DoctorDetails />} />
             <Route path="staff-scheduling" element={<StaffScheduling />} />
+            <Route path="staff-directory" element={<StaffDirectory />} />
             
             {/* Appointment management */}
             <Route path="appointments" element={<Appointments />} />
@@ -140,6 +152,8 @@ const AnimatedRoutes = () => {
             <Route path="medical-records" element={<MedicalRecords />} />
             <Route path="lab-results" element={<LabResults />} />
             <Route path="prescriptions" element={<Prescriptions />} />
+            <Route path="medical-tests" element={<MedicalTests />} />
+            <Route path="treatment-plans" element={<TreatmentPlans />} />
             
             {/* Pharmacy and inventory */}
             <Route path="pharmacy" element={<Pharmacy />} />
@@ -150,11 +164,15 @@ const AnimatedRoutes = () => {
             <Route path="analytics" element={<Analytics />} />
             <Route path="report-builder" element={<ReportBuilder />} />
             <Route path="performance-metrics" element={<PerformanceMetrics />} />
+            <Route path="database-management" element={<DatabaseManagement />} />
             
             {/* Emergency services */}
             <Route path="ambulance-request" element={<AmbulanceRequest />} />
             <Route path="ambulance-tracking" element={<AmbulanceTracking />} />
             <Route path="emergency-services" element={<EmergencyServices />} />
+            
+            {/* Nursing */}
+            <Route path="nursing-tasks" element={<NursingTasks />} />
             
             {/* AI and predictions */}
             <Route path="get-prediction" element={<GetPrediction />} />
