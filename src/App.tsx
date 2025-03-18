@@ -73,6 +73,7 @@ const AnimatedRoutes = () => {
         exit="exit"
         variants={pageVariants}
         transition={{ duration: 0.3 }}
+        className="flex min-h-screen flex-col"
       >
         <Routes location={location}>
           {/* Auth routes */}
