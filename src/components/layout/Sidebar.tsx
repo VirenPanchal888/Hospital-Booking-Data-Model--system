@@ -16,6 +16,7 @@ import { Separator } from '../ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
+import { ScrollArea } from '../ui/scroll-area';
 
 // Sidebar link type
 interface SidebarLinkProps {
@@ -40,8 +41,8 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
     <Link
       to={href}
       className={cn(
-        "sidebar-link group relative",
-        isActive && "active"
+        "sidebar-link group relative flex items-center w-full rounded-md p-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+        isActive ? "bg-accent text-accent-foreground font-medium" : "text-sidebar-foreground"
       )}
       onClick={onClick}
     >
@@ -67,24 +68,6 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
   );
 };
 
-// Sidebar theme toggle component
-const ThemeToggle = () => {
-  const { theme, setTheme } = useTheme();
-  
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="mt-2 h-9 w-9"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-    >
-      <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
-  );
-};
-
 // Sidebar props
 interface SidebarProps {
   isOpen: boolean;
@@ -95,7 +78,8 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
   
   // Determine if link is active
   const isActive = (path: string) => {
@@ -107,19 +91,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
     return allowedRoles.includes(userRole) || userRole === 'admin';
   };
   
+  // Toggle section expansion
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+  
   if (!isOpen) return null;
   
   return (
     <motion.div 
-      className="flex h-full flex-col border-r bg-sidebar text-sidebar-foreground"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      className="fixed top-16 left-0 bottom-0 w-64 flex flex-col border-r bg-sidebar text-sidebar-foreground z-20 overflow-hidden"
+      initial={{ x: -240 }}
+      animate={{ x: 0 }}
+      exit={{ x: -240 }}
       transition={{ duration: 0.2 }}
     >
       {/* User profile section */}
-      <div className="flex flex-col items-center justify-center p-6">
-        <Avatar className="h-16 w-16 mb-4">
+      <div className="flex flex-col items-center justify-center p-4">
+        <Avatar className="h-12 w-12 mb-2">
           <AvatarImage src="/placeholder.svg" alt={user?.name} />
           <AvatarFallback className="bg-primary text-primary-foreground text-xl">
             {user?.name?.charAt(0) || 'U'}
@@ -127,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
         </Avatar>
         
         <div className="text-center">
-          <h3 className="font-medium">{user?.name || 'User'}</h3>
+          <h3 className="font-medium text-sm">{user?.name || 'User'}</h3>
           <p className="text-xs text-sidebar-foreground/70 mt-1 capitalize">{user?.role || 'User'}</p>
         </div>
       </div>
@@ -135,8 +124,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
       <Separator className="bg-sidebar-border" />
       
       {/* Navigation links */}
-      <div className="flex-1 overflow-auto py-4 px-3">
-        <nav className="space-y-1">
+      <ScrollArea className="flex-1 py-2 px-2">
+        <div className="space-y-1 mb-2">
+          <p className="text-xs font-semibold text-sidebar-foreground/60 px-2 mb-1">MAIN</p>
+          
           <SidebarLink 
             href="/"
             icon={<LayoutDashboard className="h-4 w-4" />}
@@ -144,123 +135,262 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             isActive={isActive('/')}
           />
           
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/patients"
-              icon={<Users className="h-4 w-4" />}
-              label="Patients"
-              isActive={isActive('/patients')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('patients')}
+          >
+            <div className="flex items-center">
+              <Users className="h-4 w-4 mr-3" />
+              <span>Patients</span>
+            </div>
+            <span>{expandedSection === 'patients' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'patients' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/patients"
+                icon={<Users className="h-4 w-4" />}
+                label="All Patients"
+                isActive={isActive('/patients')}
+              />
+              
+              <SidebarLink 
+                href="/patient-monitoring"
+                icon={<Activity className="h-4 w-4" />}
+                label="Monitoring"
+                isActive={isActive('/patient-monitoring')}
+              />
+              
+              <SidebarLink 
+                href="/patient-referrals"
+                icon={<UserPlus className="h-4 w-4" />}
+                label="Referrals"
+                isActive={isActive('/patient-referrals')}
+              />
+            </div>
           )}
           
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/patient-referrals"
-              icon={<UserPlus className="h-4 w-4" />}
-              label="Referrals"
-              isActive={isActive('/patient-referrals')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('medical')}
+          >
+            <div className="flex items-center">
+              <Stethoscope className="h-4 w-4 mr-3" />
+              <span>Medical</span>
+            </div>
+            <span>{expandedSection === 'medical' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'medical' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/treatment-plans"
+                icon={<ClipboardList className="h-4 w-4" />}
+                label="Treatment Plans"
+                isActive={isActive('/treatment-plans')}
+              />
+              
+              <SidebarLink 
+                href="/medical-tests"
+                icon={<TestTube className="h-4 w-4" />}
+                label="Medical Tests"
+                isActive={isActive('/medical-tests')}
+              />
+              
+              <SidebarLink 
+                href="/prescriptions"
+                icon={<ScrollText className="h-4 w-4" />}
+                label="Prescriptions"
+                isActive={isActive('/prescriptions')}
+              />
+              
+              <SidebarLink 
+                href="/medical-records"
+                icon={<FileText className="h-4 w-4" />}
+                label="Medical Records"
+                isActive={isActive('/medical-records')}
+              />
+              
+              <SidebarLink 
+                href="/lab-results"
+                icon={<TestTube className="h-4 w-4" />}
+                label="Lab Results"
+                isActive={isActive('/lab-results')}
+              />
+              
+              <SidebarLink 
+                href="/clinical-pathways"
+                icon={<Route className="h-4 w-4" />}
+                label="Clinical Pathways"
+                isActive={isActive('/clinical-pathways')}
+              />
+            </div>
           )}
           
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/treatment-plans"
-              icon={<ClipboardList className="h-4 w-4" />}
-              label="Treatment Plans"
-              isActive={isActive('/treatment-plans')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('appointments')}
+          >
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-3" />
+              <span>Appointments</span>
+            </div>
+            <span>{expandedSection === 'appointments' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'appointments' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/appointments"
+                icon={<Calendar className="h-4 w-4" />}
+                label="All Appointments"
+                isActive={isActive('/appointments')}
+              />
+              
+              <SidebarLink 
+                href="/new-appointment"
+                icon={<PlusCircle className="h-4 w-4" />}
+                label="New Appointment"
+                isActive={isActive('/new-appointment')}
+              />
+              
+              <SidebarLink 
+                href="/telemedicine"
+                icon={<Activity className="h-4 w-4" />}
+                label="Telemedicine"
+                isActive={isActive('/telemedicine')}
+              />
+            </div>
           )}
           
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/clinical-pathways"
-              icon={<Route className="h-4 w-4" />}
-              label="Clinical Pathways"
-              isActive={isActive('/clinical-pathways')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('staff')}
+          >
+            <div className="flex items-center">
+              <UserCog className="h-4 w-4 mr-3" />
+              <span>Staff</span>
+            </div>
+            <span>{expandedSection === 'staff' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'staff' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/doctors"
+                icon={<UserCog className="h-4 w-4" />}
+                label="Doctors"
+                isActive={isActive('/doctors')}
+              />
+              
+              <SidebarLink 
+                href="/staff-directory"
+                icon={<Building2 className="h-4 w-4" />}
+                label="Staff Directory"
+                isActive={isActive('/staff-directory')}
+              />
+              
+              <SidebarLink 
+                href="/staff-scheduling"
+                icon={<Calendar className="h-4 w-4" />}
+                label="Staff Scheduling"
+                isActive={isActive('/staff-scheduling')}
+              />
+              
+              <SidebarLink 
+                href="/nursing-tasks"
+                icon={<List className="h-4 w-4" />}
+                label="Nursing Tasks"
+                isActive={isActive('/nursing-tasks')}
+              />
+            </div>
           )}
           
-          {showLink(['admin', 'patient']) && (
-            <SidebarLink 
-              href="/doctors"
-              icon={<UserCog className="h-4 w-4" />}
-              label="Doctors"
-              isActive={isActive('/doctors')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('billing')}
+          >
+            <div className="flex items-center">
+              <Receipt className="h-4 w-4 mr-3" />
+              <span>Finance</span>
+            </div>
+            <span>{expandedSection === 'billing' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'billing' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/billing"
+                icon={<Receipt className="h-4 w-4" />}
+                label="Billing"
+                isActive={isActive('/billing')}
+              />
+              
+              <SidebarLink 
+                href="/invoices"
+                icon={<Receipt className="h-4 w-4" />}
+                label="Invoices"
+                isActive={isActive('/invoices')}
+              />
+              
+              <SidebarLink 
+                href="/payment-processing"
+                icon={<Receipt className="h-4 w-4" />}
+                label="Payment Processing"
+                isActive={isActive('/payment-processing')}
+              />
+              
+              <SidebarLink 
+                href="/insurance-claims"
+                icon={<FileText className="h-4 w-4" />}
+                label="Insurance Claims"
+                isActive={isActive('/insurance-claims')}
+              />
+            </div>
           )}
           
-          {showLink(['admin', 'doctor', 'nurse', 'executive']) && (
-            <SidebarLink 
-              href="/staff-directory"
-              icon={<Building2 className="h-4 w-4" />}
-              label="Staff Directory"
-              isActive={isActive('/staff-directory')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('pharmacy')}
+          >
+            <div className="flex items-center">
+              <PillIcon className="h-4 w-4 mr-3" />
+              <span>Pharmacy</span>
+            </div>
+            <span>{expandedSection === 'pharmacy' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'pharmacy' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/pharmacy"
+                icon={<PillIcon className="h-4 w-4" />}
+                label="Pharmacy"
+                isActive={isActive('/pharmacy')}
+              />
+              
+              <SidebarLink 
+                href="/inventory"
+                icon={<PillIcon className="h-4 w-4" />}
+                label="Inventory"
+                isActive={isActive('/inventory')}
+              />
+              
+              <SidebarLink 
+                href="/medication-request"
+                icon={<PillIcon className="h-4 w-4" />}
+                label="Medication Request"
+                isActive={isActive('/medication-request')}
+              />
+            </div>
           )}
-          
-          <SidebarLink 
-            href="/appointments"
-            icon={<Calendar className="h-4 w-4" />}
-            label="Appointments"
-            isActive={isActive('/appointments')}
-          />
-          
-          <SidebarLink 
-            href="/new-appointment"
-            icon={<PlusCircle className="h-4 w-4" />}
-            label="New Appointment"
-            isActive={isActive('/new-appointment')}
-          />
-          
-          {showLink(['admin', 'nurse']) && (
-            <SidebarLink 
-              href="/nursing-tasks"
-              icon={<List className="h-4 w-4" />}
-              label="Nursing Tasks"
-              isActive={isActive('/nursing-tasks')}
-            />
-          )}
-          
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/medical-tests"
-              icon={<TestTube className="h-4 w-4" />}
-              label="Medical Tests"
-              isActive={isActive('/medical-tests')}
-            />
-          )}
-          
-          {showLink(['admin', 'doctor', 'nurse']) && (
-            <SidebarLink 
-              href="/patient-monitoring"
-              icon={<Activity className="h-4 w-4" />}
-              label="Patient Monitoring"
-              isActive={isActive('/patient-monitoring')}
-            />
-          )}
-          
-          {showLink(['admin', 'finance', 'patient']) && (
-            <SidebarLink 
-              href="/billing"
-              icon={<Receipt className="h-4 w-4" />}
-              label="Billing"
-              isActive={isActive('/billing')}
-            />
-          )}
-          
-          <SidebarLink 
-            href="/medical-records"
-            icon={<FileText className="h-4 w-4" />}
-            label="Medical Records"
-            isActive={isActive('/medical-records')}
-          />
-          
-          <SidebarLink 
-            href="/pharmacy"
-            icon={<PillIcon className="h-4 w-4" />}
-            label="Pharmacy"
-            isActive={isActive('/pharmacy')}
-          />
           
           <SidebarLink 
             href="/medical-library"
@@ -269,41 +399,96 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             isActive={isActive('/medical-library')}
           />
           
-          {showLink(['admin', 'doctor', 'executive']) && (
-            <SidebarLink 
-              href="/analytics"
-              icon={<BarChart3 className="h-4 w-4" />}
-              label="Analytics"
-              isPro={true}
-              isActive={isActive('/analytics')}
-            />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('analytics')}
+          >
+            <div className="flex items-center">
+              <BarChart3 className="h-4 w-4 mr-3" />
+              <span>Analytics</span>
+            </div>
+            <span>{expandedSection === 'analytics' ? '-' : '+'}</span>
+          </Button>
+          
+          {expandedSection === 'analytics' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/analytics"
+                icon={<BarChart3 className="h-4 w-4" />}
+                label="Analytics Dashboard"
+                isActive={isActive('/analytics')}
+              />
+              
+              <SidebarLink 
+                href="/report-builder"
+                icon={<BarChart3 className="h-4 w-4" />}
+                label="Report Builder"
+                isActive={isActive('/report-builder')}
+              />
+              
+              <SidebarLink 
+                href="/performance-metrics"
+                icon={<BarChart3 className="h-4 w-4" />}
+                label="Performance Metrics"
+                isActive={isActive('/performance-metrics')}
+              />
+            </div>
           )}
           
-          <SidebarLink 
-            href="/ambulance-request"
-            icon={<Ambulance className="h-4 w-4" />}
-            label="Ambulance"
-            isActive={isActive('/ambulance-request')}
-          />
+          <Button 
+            variant="ghost" 
+            className="w-full flex justify-between items-center text-sm p-2"
+            onClick={() => toggleSection('emergency')}
+          >
+            <div className="flex items-center">
+              <Ambulance className="h-4 w-4 mr-3" />
+              <span>Emergency</span>
+            </div>
+            <span>{expandedSection === 'emergency' ? '-' : '+'}</span>
+          </Button>
           
-          {showLink(['admin', 'doctor', 'executive']) && (
-            <SidebarLink 
-              href="/database-management"
-              icon={<Database className="h-4 w-4" />}
-              label="Database"
-              isActive={isActive('/database-management')}
-            />
+          {expandedSection === 'emergency' && (
+            <div className="pl-6 space-y-1">
+              <SidebarLink 
+                href="/ambulance-request"
+                icon={<Ambulance className="h-4 w-4" />}
+                label="Ambulance Request"
+                isActive={isActive('/ambulance-request')}
+              />
+              
+              <SidebarLink 
+                href="/ambulance-tracking"
+                icon={<Ambulance className="h-4 w-4" />}
+                label="Ambulance Tracking"
+                isActive={isActive('/ambulance-tracking')}
+              />
+              
+              <SidebarLink 
+                href="/emergency-services"
+                icon={<Ambulance className="h-4 w-4" />}
+                label="Emergency Services"
+                isActive={isActive('/emergency-services')}
+              />
+            </div>
           )}
           
           <SidebarLink 
             href="/get-prediction"
             icon={<Brain className="h-4 w-4" />}
-            label="Get Prediction"
+            label="AI Predictions"
             isPro={true}
             isActive={isActive('/get-prediction')}
           />
-        </nav>
-      </div>
+          
+          <SidebarLink 
+            href="/database-management"
+            icon={<Database className="h-4 w-4" />}
+            label="Database Management"
+            isActive={isActive('/database-management')}
+          />
+        </div>
+      </ScrollArea>
       
       {/* Bottom actions */}
       <div className="mt-auto p-4 border-t border-sidebar-border">
@@ -318,7 +503,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             Log out
           </Button>
           
-          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 h-9 w-9"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+            <span className="sr-only">Toggle theme</span>
+          </Button>
         </div>
       </div>
     </motion.div>
