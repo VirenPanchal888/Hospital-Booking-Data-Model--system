@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, UserCog, Calendar, PlusCircle, 
   Receipt, FileText, PillIcon, BarChart3, Ambulance,
   LogOut, Brain, Settings, Moon, Sun, ThermometerIcon,
-  Database, Flask, ClipboardList, Stethoscope, UserPlus,
+  Database, TestTube, ClipboardList, Stethoscope, UserPlus,
   HeartPulse, List, Activity, ScrollText, Building2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -214,7 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
           {showLink(['admin', 'doctor', 'nurse']) && (
             <SidebarLink 
               href="/medical-tests"
-              icon={<Flask className="h-4 w-4" />}
+              icon={<TestTube className="h-4 w-4" />}
               label="Medical Tests"
               isActive={isActive('/medical-tests')}
             />
