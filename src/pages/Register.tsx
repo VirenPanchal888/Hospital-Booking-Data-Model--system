@@ -26,6 +26,18 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Define role descriptions for better user understanding
+const roleDescriptions: Record<UserRole, string> = {
+  patient: "Access your medical records, appointments, and communicate with healthcare providers",
+  doctor: "Manage patient care, prescriptions, medical records, and appointments",
+  nurse: "Assist doctors with patient care, update vitals, and administer medications",
+  admin: "Full system access to manage all hospital operations and user accounts",
+  receptionist: "Schedule appointments, register new patients, and manage the front desk",
+  pharmacist: "Manage medications, inventory, and dispense prescriptions",
+  lab_technician: "Process lab samples, record results, and manage medical tests",
+  finance: "Handle billing, insurance claims, and payment processing"
+};
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +52,8 @@ const Register: React.FC = () => {
       role: 'patient',
     },
   });
+  
+  const selectedRole = form.watch('role');
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
@@ -152,6 +166,11 @@ const Register: React.FC = () => {
                           <SelectItem value="admin">Administrator</SelectItem>
                         </SelectContent>
                       </Select>
+                      {selectedRole && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {roleDescriptions[selectedRole as UserRole]}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

@@ -7,7 +7,7 @@ import {
   LogOut, Brain, Settings, Moon, Sun, ThermometerIcon,
   Database, TestTube, ClipboardList, Stethoscope, UserPlus,
   HeartPulse, List, Activity, ScrollText, Building2,
-  BookOpen, Route
+  BookOpen, Route, Lock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useState } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
+import { UserRole } from '@/contexts/AuthContext';
 
 // Sidebar link type
 interface SidebarLinkProps {
@@ -26,6 +27,8 @@ interface SidebarLinkProps {
   isPro?: boolean;
   isActive: boolean;
   onClick?: () => void;
+  allowedRoles?: UserRole[];
+  userRole?: UserRole;
 }
 
 // Sidebar link component with animations
@@ -35,8 +38,15 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
   label, 
   isPro = false,
   isActive,
-  onClick 
+  onClick,
+  allowedRoles,
+  userRole
 }) => {
+  // Check if the user has access to this link
+  const hasAccess = !allowedRoles || !userRole || allowedRoles.includes(userRole) || userRole === 'admin';
+  
+  if (!hasAccess) return null;
+  
   return (
     <Link
       to={href}
@@ -68,6 +78,56 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
   );
 };
 
+// Role-specific section props
+interface SectionButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  isExpanded: boolean;
+  allowedRoles?: UserRole[];
+  userRole?: UserRole;
+}
+
+// Section button component
+const SectionButton: React.FC<SectionButtonProps> = ({
+  icon,
+  label,
+  onClick,
+  isExpanded,
+  allowedRoles,
+  userRole
+}) => {
+  // Check if the user has access to this section
+  const hasAccess = !allowedRoles || !userRole || allowedRoles.includes(userRole) || userRole === 'admin';
+  
+  if (!hasAccess) return null;
+  
+  return (
+    <Button 
+      variant="ghost" 
+      className="w-full flex justify-between items-center text-sm p-2"
+      onClick={onClick}
+    >
+      <div className="flex items-center">
+        {icon}
+        <span className="ml-3">{label}</span>
+      </div>
+      <span>{isExpanded ? '-' : '+'}</span>
+    </Button>
+  );
+};
+
+// Define role access for different sections
+const allRoles: UserRole[] = ['admin', 'doctor', 'nurse', 'patient', 'receptionist', 'pharmacist', 'lab_technician', 'finance'];
+const medicalStaff: UserRole[] = ['admin', 'doctor', 'nurse'];
+const clinicalStaff: UserRole[] = ['admin', 'doctor', 'nurse', 'lab_technician'];
+const adminRoles: UserRole[] = ['admin', 'receptionist'];
+const financeRoles: UserRole[] = ['admin', 'finance'];
+const pharmacyRoles: UserRole[] = ['admin', 'pharmacist'];
+const nurseRoles: UserRole[] = ['admin', 'nurse'];
+const doctorRoles: UserRole[] = ['admin', 'doctor'];
+const emergencyRoles: UserRole[] = ['admin', 'doctor', 'nurse', 'receptionist'];
+
 // Sidebar props
 interface SidebarProps {
   isOpen: boolean;
@@ -84,11 +144,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
   // Determine if link is active
   const isActive = (path: string) => {
     return location.pathname === path;
-  };
-  
-  // Determine which links to show based on user role
-  const showLink = (allowedRoles: string[]) => {
-    return allowedRoles.includes(userRole) || userRole === 'admin';
   };
   
   // Toggle section expansion
@@ -133,19 +188,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             icon={<LayoutDashboard className="h-4 w-4" />}
             label="Dashboard"
             isActive={isActive('/')}
+            allowedRoles={allRoles}
+            userRole={userRole as UserRole}
           />
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<Users className="h-4 w-4" />}
+            label="Patients"
             onClick={() => toggleSection('patients')}
-          >
-            <div className="flex items-center">
-              <Users className="h-4 w-4 mr-3" />
-              <span>Patients</span>
-            </div>
-            <span>{expandedSection === 'patients' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'patients'}
+            allowedRoles={[...medicalStaff, 'receptionist', 'patient']}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'patients' && (
             <div className="pl-6 space-y-1">
@@ -154,6 +208,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Users className="h-4 w-4" />}
                 label="All Patients"
                 isActive={isActive('/patients')}
+                allowedRoles={[...medicalStaff, 'receptionist']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -161,6 +217,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Activity className="h-4 w-4" />}
                 label="Monitoring"
                 isActive={isActive('/patient-monitoring')}
+                allowedRoles={[...medicalStaff, 'patient']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -168,21 +226,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<UserPlus className="h-4 w-4" />}
                 label="Referrals"
                 isActive={isActive('/patient-referrals')}
+                allowedRoles={[...doctorRoles, 'receptionist']}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<Stethoscope className="h-4 w-4" />}
+            label="Medical"
             onClick={() => toggleSection('medical')}
-          >
-            <div className="flex items-center">
-              <Stethoscope className="h-4 w-4 mr-3" />
-              <span>Medical</span>
-            </div>
-            <span>{expandedSection === 'medical' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'medical'}
+            allowedRoles={clinicalStaff}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'medical' && (
             <div className="pl-6 space-y-1">
@@ -191,6 +248,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<ClipboardList className="h-4 w-4" />}
                 label="Treatment Plans"
                 isActive={isActive('/treatment-plans')}
+                allowedRoles={[...doctorRoles, 'patient']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -198,6 +257,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<TestTube className="h-4 w-4" />}
                 label="Medical Tests"
                 isActive={isActive('/medical-tests')}
+                allowedRoles={[...clinicalStaff, 'lab_technician']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -205,6 +266,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<ScrollText className="h-4 w-4" />}
                 label="Prescriptions"
                 isActive={isActive('/prescriptions')}
+                allowedRoles={[...clinicalStaff, 'patient', 'pharmacist']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -212,6 +275,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<FileText className="h-4 w-4" />}
                 label="Medical Records"
                 isActive={isActive('/medical-records')}
+                allowedRoles={clinicalStaff}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -219,6 +284,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<TestTube className="h-4 w-4" />}
                 label="Lab Results"
                 isActive={isActive('/lab-results')}
+                allowedRoles={[...clinicalStaff, 'patient', 'lab_technician']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -226,21 +293,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Route className="h-4 w-4" />}
                 label="Clinical Pathways"
                 isActive={isActive('/clinical-pathways')}
+                allowedRoles={clinicalStaff}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<Calendar className="h-4 w-4" />}
+            label="Appointments"
             onClick={() => toggleSection('appointments')}
-          >
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-3" />
-              <span>Appointments</span>
-            </div>
-            <span>{expandedSection === 'appointments' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'appointments'}
+            allowedRoles={allRoles}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'appointments' && (
             <div className="pl-6 space-y-1">
@@ -249,6 +315,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Calendar className="h-4 w-4" />}
                 label="All Appointments"
                 isActive={isActive('/appointments')}
+                allowedRoles={allRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -256,6 +324,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<PlusCircle className="h-4 w-4" />}
                 label="New Appointment"
                 isActive={isActive('/new-appointment')}
+                allowedRoles={[...adminRoles, ...medicalStaff, 'patient']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -263,21 +333,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Activity className="h-4 w-4" />}
                 label="Telemedicine"
                 isActive={isActive('/telemedicine')}
+                allowedRoles={[...medicalStaff, 'patient']}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<UserCog className="h-4 w-4" />}
+            label="Staff"
             onClick={() => toggleSection('staff')}
-          >
-            <div className="flex items-center">
-              <UserCog className="h-4 w-4 mr-3" />
-              <span>Staff</span>
-            </div>
-            <span>{expandedSection === 'staff' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'staff'}
+            allowedRoles={[...adminRoles, ...medicalStaff]}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'staff' && (
             <div className="pl-6 space-y-1">
@@ -286,6 +355,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<UserCog className="h-4 w-4" />}
                 label="Doctors"
                 isActive={isActive('/doctors')}
+                allowedRoles={[...adminRoles, ...medicalStaff]}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -293,6 +364,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Building2 className="h-4 w-4" />}
                 label="Staff Directory"
                 isActive={isActive('/staff-directory')}
+                allowedRoles={allRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -300,6 +373,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Calendar className="h-4 w-4" />}
                 label="Staff Scheduling"
                 isActive={isActive('/staff-scheduling')}
+                allowedRoles={adminRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -307,21 +382,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<List className="h-4 w-4" />}
                 label="Nursing Tasks"
                 isActive={isActive('/nursing-tasks')}
+                allowedRoles={nurseRoles}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<Receipt className="h-4 w-4" />}
+            label="Finance"
             onClick={() => toggleSection('billing')}
-          >
-            <div className="flex items-center">
-              <Receipt className="h-4 w-4 mr-3" />
-              <span>Finance</span>
-            </div>
-            <span>{expandedSection === 'billing' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'billing'}
+            allowedRoles={financeRoles}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'billing' && (
             <div className="pl-6 space-y-1">
@@ -330,6 +404,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Receipt className="h-4 w-4" />}
                 label="Billing"
                 isActive={isActive('/billing')}
+                allowedRoles={financeRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -337,6 +413,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Receipt className="h-4 w-4" />}
                 label="Invoices"
                 isActive={isActive('/invoices')}
+                allowedRoles={financeRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -344,6 +422,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Receipt className="h-4 w-4" />}
                 label="Payment Processing"
                 isActive={isActive('/payment-processing')}
+                allowedRoles={financeRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -351,21 +431,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<FileText className="h-4 w-4" />}
                 label="Insurance Claims"
                 isActive={isActive('/insurance-claims')}
+                allowedRoles={financeRoles}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<PillIcon className="h-4 w-4" />}
+            label="Pharmacy"
             onClick={() => toggleSection('pharmacy')}
-          >
-            <div className="flex items-center">
-              <PillIcon className="h-4 w-4 mr-3" />
-              <span>Pharmacy</span>
-            </div>
-            <span>{expandedSection === 'pharmacy' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'pharmacy'}
+            allowedRoles={pharmacyRoles}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'pharmacy' && (
             <div className="pl-6 space-y-1">
@@ -374,6 +453,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<PillIcon className="h-4 w-4" />}
                 label="Pharmacy"
                 isActive={isActive('/pharmacy')}
+                allowedRoles={pharmacyRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -381,6 +462,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<PillIcon className="h-4 w-4" />}
                 label="Inventory"
                 isActive={isActive('/inventory')}
+                allowedRoles={pharmacyRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -388,6 +471,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<PillIcon className="h-4 w-4" />}
                 label="Medication Request"
                 isActive={isActive('/medication-request')}
+                allowedRoles={[...pharmacyRoles, ...medicalStaff]}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
@@ -397,19 +482,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             icon={<BookOpen className="h-4 w-4" />}
             label="Medical Library"
             isActive={isActive('/medical-library')}
+            allowedRoles={allRoles}
+            userRole={userRole as UserRole}
           />
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<BarChart3 className="h-4 w-4" />}
+            label="Analytics"
             onClick={() => toggleSection('analytics')}
-          >
-            <div className="flex items-center">
-              <BarChart3 className="h-4 w-4 mr-3" />
-              <span>Analytics</span>
-            </div>
-            <span>{expandedSection === 'analytics' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'analytics'}
+            allowedRoles={['admin', 'finance', 'doctor']}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'analytics' && (
             <div className="pl-6 space-y-1">
@@ -418,6 +502,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<BarChart3 className="h-4 w-4" />}
                 label="Analytics Dashboard"
                 isActive={isActive('/analytics')}
+                allowedRoles={['admin', 'finance', 'doctor']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -425,6 +511,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<BarChart3 className="h-4 w-4" />}
                 label="Report Builder"
                 isActive={isActive('/report-builder')}
+                allowedRoles={['admin', 'finance']}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -432,21 +520,20 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<BarChart3 className="h-4 w-4" />}
                 label="Performance Metrics"
                 isActive={isActive('/performance-metrics')}
+                allowedRoles={['admin']}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            className="w-full flex justify-between items-center text-sm p-2"
+          <SectionButton
+            icon={<Ambulance className="h-4 w-4" />}
+            label="Emergency"
             onClick={() => toggleSection('emergency')}
-          >
-            <div className="flex items-center">
-              <Ambulance className="h-4 w-4 mr-3" />
-              <span>Emergency</span>
-            </div>
-            <span>{expandedSection === 'emergency' ? '-' : '+'}</span>
-          </Button>
+            isExpanded={expandedSection === 'emergency'}
+            allowedRoles={emergencyRoles}
+            userRole={userRole as UserRole}
+          />
           
           {expandedSection === 'emergency' && (
             <div className="pl-6 space-y-1">
@@ -455,6 +542,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Ambulance className="h-4 w-4" />}
                 label="Ambulance Request"
                 isActive={isActive('/ambulance-request')}
+                allowedRoles={emergencyRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -462,6 +551,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Ambulance className="h-4 w-4" />}
                 label="Ambulance Tracking"
                 isActive={isActive('/ambulance-tracking')}
+                allowedRoles={emergencyRoles}
+                userRole={userRole as UserRole}
               />
               
               <SidebarLink 
@@ -469,6 +560,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
                 icon={<Ambulance className="h-4 w-4" />}
                 label="Emergency Services"
                 isActive={isActive('/emergency-services')}
+                allowedRoles={emergencyRoles}
+                userRole={userRole as UserRole}
               />
             </div>
           )}
@@ -479,6 +572,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             label="AI Predictions"
             isPro={true}
             isActive={isActive('/get-prediction')}
+            allowedRoles={doctorRoles}
+            userRole={userRole as UserRole}
           />
           
           <SidebarLink 
@@ -486,6 +581,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             icon={<Database className="h-4 w-4" />}
             label="Database Management"
             isActive={isActive('/database-management')}
+            allowedRoles={['admin']}
+            userRole={userRole as UserRole}
           />
         </div>
       </ScrollArea>

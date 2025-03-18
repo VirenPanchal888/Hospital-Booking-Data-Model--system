@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -43,7 +44,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, UserRole } from "./contexts/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
 
 import PatientVitals from "./pages/PatientVitals";
@@ -55,6 +56,17 @@ import StaffDirectory from "./pages/StaffDirectory";
 import PatientReferrals from "./pages/PatientReferrals";
 import MedicalLibrary from "./pages/MedicalLibrary";
 import ClinicalPathways from "./pages/ClinicalPathways";
+
+// Define role-based access for each route
+const allRoles: UserRole[] = ['admin', 'doctor', 'nurse', 'patient', 'receptionist', 'pharmacist', 'lab_technician', 'finance'];
+const medicalStaff: UserRole[] = ['admin', 'doctor', 'nurse'];
+const clinicalStaff: UserRole[] = ['admin', 'doctor', 'nurse', 'lab_technician'];
+const adminRoles: UserRole[] = ['admin', 'receptionist'];
+const financeRoles: UserRole[] = ['admin', 'finance'];
+const pharmacyRoles: UserRole[] = ['admin', 'pharmacist'];
+const nurseRoles: UserRole[] = ['admin', 'nurse'];
+const doctorRoles: UserRole[] = ['admin', 'doctor'];
+const emergencyRoles: UserRole[] = ['admin', 'doctor', 'nurse', 'receptionist'];
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -116,57 +128,229 @@ const AnimatedRoutes = () => {
           }>
             <Route index element={<Dashboard />} />
             
-            <Route path="patients" element={<Patients />} />
-            <Route path="patients/:id" element={<PatientDetails />} />
-            <Route path="patient-history/:id" element={<PatientHistory />} />
-            <Route path="patient-monitoring" element={<PatientMonitoring />} />
-            <Route path="patient-vitals/:id" element={<PatientVitals />} />
-            <Route path="patient-referrals" element={<PatientReferrals />} />
+            {/* Patient Management */}
+            <Route path="patients" element={
+              <RequireAuth allowedRoles={[...medicalStaff, 'receptionist']}>
+                <Patients />
+              </RequireAuth>
+            } />
+            <Route path="patients/:id" element={
+              <RequireAuth allowedRoles={[...medicalStaff, 'receptionist']}>
+                <PatientDetails />
+              </RequireAuth>
+            } />
+            <Route path="patient-history/:id" element={
+              <RequireAuth allowedRoles={clinicalStaff}>
+                <PatientHistory />
+              </RequireAuth>
+            } />
+            <Route path="patient-monitoring" element={
+              <RequireAuth allowedRoles={[...medicalStaff, 'patient']}>
+                <PatientMonitoring />
+              </RequireAuth>
+            } />
+            <Route path="patient-vitals/:id" element={
+              <RequireAuth allowedRoles={clinicalStaff}>
+                <PatientVitals />
+              </RequireAuth>
+            } />
+            <Route path="patient-referrals" element={
+              <RequireAuth allowedRoles={[...doctorRoles, 'receptionist']}>
+                <PatientReferrals />
+              </RequireAuth>
+            } />
             
-            <Route path="doctors" element={<Doctors />} />
-            <Route path="doctors/:id" element={<DoctorDetails />} />
-            <Route path="staff-scheduling" element={<StaffScheduling />} />
-            <Route path="staff-directory" element={<StaffDirectory />} />
+            {/* Staff Management */}
+            <Route path="doctors" element={
+              <RequireAuth allowedRoles={[...adminRoles, ...medicalStaff]}>
+                <Doctors />
+              </RequireAuth>
+            } />
+            <Route path="doctors/:id" element={
+              <RequireAuth allowedRoles={[...adminRoles, ...medicalStaff]}>
+                <DoctorDetails />
+              </RequireAuth>
+            } />
+            <Route path="staff-scheduling" element={
+              <RequireAuth allowedRoles={adminRoles}>
+                <StaffScheduling />
+              </RequireAuth>
+            } />
+            <Route path="staff-directory" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <StaffDirectory />
+              </RequireAuth>
+            } />
             
-            <Route path="appointments" element={<Appointments />} />
-            <Route path="new-appointment" element={<NewAppointment />} />
-            <Route path="telemedicine" element={<Telemedicine />} />
+            {/* Appointments */}
+            <Route path="appointments" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <Appointments />
+              </RequireAuth>
+            } />
+            <Route path="new-appointment" element={
+              <RequireAuth allowedRoles={[...adminRoles, ...medicalStaff, 'patient']}>
+                <NewAppointment />
+              </RequireAuth>
+            } />
+            <Route path="telemedicine" element={
+              <RequireAuth allowedRoles={[...medicalStaff, 'patient']}>
+                <Telemedicine />
+              </RequireAuth>
+            } />
             
-            <Route path="billing" element={<Billing />} />
-            <Route path="invoices" element={<Invoices />} />
-            <Route path="invoices/:id" element={<InvoiceDetails />} />
-            <Route path="payment-processing" element={<PaymentProcessing />} />
-            <Route path="insurance-claims" element={<InsuranceClaims />} />
+            {/* Billing & Finance */}
+            <Route path="billing" element={
+              <RequireAuth allowedRoles={financeRoles}>
+                <Billing />
+              </RequireAuth>
+            } />
+            <Route path="invoices" element={
+              <RequireAuth allowedRoles={financeRoles}>
+                <Invoices />
+              </RequireAuth>
+            } />
+            <Route path="invoices/:id" element={
+              <RequireAuth allowedRoles={financeRoles}>
+                <InvoiceDetails />
+              </RequireAuth>
+            } />
+            <Route path="payment-processing" element={
+              <RequireAuth allowedRoles={financeRoles}>
+                <PaymentProcessing />
+              </RequireAuth>
+            } />
+            <Route path="insurance-claims" element={
+              <RequireAuth allowedRoles={financeRoles}>
+                <InsuranceClaims />
+              </RequireAuth>
+            } />
             
-            <Route path="medical-records" element={<MedicalRecords />} />
-            <Route path="lab-results" element={<LabResults />} />
-            <Route path="prescriptions" element={<Prescriptions />} />
-            <Route path="medical-tests" element={<MedicalTests />} />
-            <Route path="treatment-plans" element={<TreatmentPlans />} />
+            {/* Medical Records */}
+            <Route path="medical-records" element={
+              <RequireAuth allowedRoles={clinicalStaff}>
+                <MedicalRecords />
+              </RequireAuth>
+            } />
+            <Route path="lab-results" element={
+              <RequireAuth allowedRoles={[...clinicalStaff, 'patient']}>
+                <LabResults />
+              </RequireAuth>
+            } />
+            <Route path="prescriptions" element={
+              <RequireAuth allowedRoles={[...clinicalStaff, 'patient', 'pharmacist']}>
+                <Prescriptions />
+              </RequireAuth>
+            } />
+            <Route path="medical-tests" element={
+              <RequireAuth allowedRoles={[...clinicalStaff, 'lab_technician']}>
+                <MedicalTests />
+              </RequireAuth>
+            } />
+            <Route path="treatment-plans" element={
+              <RequireAuth allowedRoles={[...doctorRoles, 'patient']}>
+                <TreatmentPlans />
+              </RequireAuth>
+            } />
             
-            <Route path="pharmacy" element={<Pharmacy />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="medication-request" element={<MedicationRequest />} />
+            {/* Pharmacy */}
+            <Route path="pharmacy" element={
+              <RequireAuth allowedRoles={pharmacyRoles}>
+                <Pharmacy />
+              </RequireAuth>
+            } />
+            <Route path="inventory" element={
+              <RequireAuth allowedRoles={pharmacyRoles}>
+                <Inventory />
+              </RequireAuth>
+            } />
+            <Route path="medication-request" element={
+              <RequireAuth allowedRoles={[...pharmacyRoles, ...medicalStaff]}>
+                <MedicationRequest />
+              </RequireAuth>
+            } />
             
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="report-builder" element={<ReportBuilder />} />
-            <Route path="performance-metrics" element={<PerformanceMetrics />} />
-            <Route path="database-management" element={<DatabaseManagement />} />
+            {/* Analytics & Reporting */}
+            <Route path="analytics" element={
+              <RequireAuth allowedRoles={['admin', 'finance', 'doctor']}>
+                <Analytics />
+              </RequireAuth>
+            } />
+            <Route path="report-builder" element={
+              <RequireAuth allowedRoles={['admin', 'finance']}>
+                <ReportBuilder />
+              </RequireAuth>
+            } />
+            <Route path="performance-metrics" element={
+              <RequireAuth allowedRoles={['admin']}>
+                <PerformanceMetrics />
+              </RequireAuth>
+            } />
+            <Route path="database-management" element={
+              <RequireAuth allowedRoles={['admin']}>
+                <DatabaseManagement />
+              </RequireAuth>
+            } />
             
-            <Route path="ambulance-request" element={<AmbulanceRequest />} />
-            <Route path="ambulance-tracking" element={<AmbulanceTracking />} />
-            <Route path="emergency-services" element={<EmergencyServices />} />
+            {/* Emergency Services */}
+            <Route path="ambulance-request" element={
+              <RequireAuth allowedRoles={emergencyRoles}>
+                <AmbulanceRequest />
+              </RequireAuth>
+            } />
+            <Route path="ambulance-tracking" element={
+              <RequireAuth allowedRoles={emergencyRoles}>
+                <AmbulanceTracking />
+              </RequireAuth>
+            } />
+            <Route path="emergency-services" element={
+              <RequireAuth allowedRoles={emergencyRoles}>
+                <EmergencyServices />
+              </RequireAuth>
+            } />
             
-            <Route path="nursing-tasks" element={<NursingTasks />} />
+            {/* Nursing */}
+            <Route path="nursing-tasks" element={
+              <RequireAuth allowedRoles={nurseRoles}>
+                <NursingTasks />
+              </RequireAuth>
+            } />
             
-            <Route path="get-prediction" element={<GetPrediction />} />
+            {/* AI Features */}
+            <Route path="get-prediction" element={
+              <RequireAuth allowedRoles={doctorRoles}>
+                <GetPrediction />
+              </RequireAuth>
+            } />
             
-            <Route path="medical-library" element={<MedicalLibrary />} />
-            <Route path="clinical-pathways" element={<ClinicalPathways />} />
+            {/* Medical Resources */}
+            <Route path="medical-library" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <MedicalLibrary />
+              </RequireAuth>
+            } />
+            <Route path="clinical-pathways" element={
+              <RequireAuth allowedRoles={clinicalStaff}>
+                <ClinicalPathways />
+              </RequireAuth>
+            } />
             
-            <Route path="profile" element={<UserProfile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="notifications" element={<Notifications />} />
+            {/* User Settings */}
+            <Route path="profile" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <UserProfile />
+              </RequireAuth>
+            } />
+            <Route path="settings" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <Settings />
+              </RequireAuth>
+            } />
+            <Route path="notifications" element={
+              <RequireAuth allowedRoles={allRoles}>
+                <Notifications />
+              </RequireAuth>
+            } />
           </Route>
           
           <Route path="*" element={<NotFound />} />

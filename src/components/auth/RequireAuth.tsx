@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
+import { UserRole } from '@/contexts/AuthContext';
 
 interface RequireAuthProps {
   children: JSX.Element;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 const RequireAuth = ({ children, allowedRoles }: RequireAuthProps) => {
