@@ -11,6 +11,49 @@ import { useDatabase } from '@/contexts/DatabaseContext';
 import { Calendar, FileText, Clipboard, Pill, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
+// Define specific types for each entity
+interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  doctorName: string;
+  department: string;
+  status: string;
+  reason: string;
+  notes?: string;
+}
+
+interface Medication {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: string;
+  startDate: string;
+  endDate: string | null;
+  prescribedBy: string;
+  status: string;
+  notes?: string;
+  refills?: number;
+}
+
+interface LabTest {
+  id: string;
+  testName: string;
+  testType: string;
+  date: string;
+  resultDate: string | null;
+  orderedBy: string;
+  status: string;
+  result?: string;
+  notes?: string;
+}
+
+type TimelineEvent = {
+  type: 'appointment' | 'medication' | 'labTest';
+  date: string;
+  data: Appointment | Medication | LabTest;
+};
+
 const PatientHistory: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -45,6 +88,19 @@ const PatientHistory: React.FC = () => {
     } catch (error) {
       return dateString;
     }
+  };
+  
+  // Type guards for determining event types
+  const isAppointment = (event: TimelineEvent['data']): event is Appointment => {
+    return 'reason' in event && 'doctorName' in event;
+  };
+  
+  const isMedication = (event: TimelineEvent['data']): event is Medication => {
+    return 'name' in event && 'dosage' in event && 'frequency' in event;
+  };
+  
+  const isLabTest = (event: TimelineEvent['data']): event is LabTest => {
+    return 'testName' in event && 'testType' in event;
   };
   
   return (
@@ -87,17 +143,17 @@ const PatientHistory: React.FC = () => {
                   {/* Combine all events and sort by date */}
                   {[
                     ...appointments.map(a => ({
-                      type: 'appointment',
+                      type: 'appointment' as const,
                       date: a.date,
                       data: a
                     })),
                     ...medications.map(m => ({
-                      type: 'medication',
+                      type: 'medication' as const,
                       date: m.startDate,
                       data: m
                     })),
                     ...labTests.map(l => ({
-                      type: 'labTest',
+                      type: 'labTest' as const,
                       date: l.date,
                       data: l
                     }))
@@ -116,16 +172,16 @@ const PatientHistory: React.FC = () => {
                         
                         <div className="pt-1">
                           <h3 className="text-lg font-medium">
-                            {event.type === 'appointment' && `Appointment: ${event.data.reason}`}
-                            {event.type === 'medication' && `Medication: ${event.data.name} prescribed`}
-                            {event.type === 'labTest' && `Lab Test: ${event.data.testName}`}
+                            {isAppointment(event.data) && `Appointment: ${event.data.reason}`}
+                            {isMedication(event.data) && `Medication: ${event.data.name} prescribed`}
+                            {isLabTest(event.data) && `Lab Test: ${event.data.testName}`}
                           </h3>
                           
                           <p className="text-sm text-muted-foreground mb-2">
                             {formatDate(event.date)}
                           </p>
                           
-                          {event.type === 'appointment' && (
+                          {isAppointment(event.data) && (
                             <Card className="border">
                               <CardContent className="p-4">
                                 <p><span className="font-medium">Doctor:</span> {event.data.doctorName}</p>
@@ -141,7 +197,7 @@ const PatientHistory: React.FC = () => {
                             </Card>
                           )}
                           
-                          {event.type === 'medication' && (
+                          {isMedication(event.data) && (
                             <Card className="border">
                               <CardContent className="p-4">
                                 <p><span className="font-medium">Dosage:</span> {event.data.dosage}</p>
@@ -161,7 +217,7 @@ const PatientHistory: React.FC = () => {
                             </Card>
                           )}
                           
-                          {event.type === 'labTest' && (
+                          {isLabTest(event.data) && (
                             <Card className="border">
                               <CardContent className="p-4">
                                 <p><span className="font-medium">Test type:</span> {event.data.testType}</p>

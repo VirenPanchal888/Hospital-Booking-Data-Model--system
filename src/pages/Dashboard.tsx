@@ -9,7 +9,8 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import AppointmentList from '@/components/dashboard/AppointmentList';
 import RecentPatients from '@/components/dashboard/RecentPatients';
 import ActivityChart from '@/components/dashboard/ActivityChart';
-import { AppointmentStatus, UserRole } from '@/components/dashboard/AppointmentList';
+import { AppointmentStatus } from '@/components/dashboard/AppointmentList';
+import { UserRole } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 
 // Types

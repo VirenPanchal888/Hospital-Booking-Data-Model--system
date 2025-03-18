@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ interface InventoryItem {
 }
 
 const Inventory: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -65,7 +67,6 @@ const Inventory: React.FC = () => {
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [restockQuantity, setRestockQuantity] = useState(0);
   
-  // Mock inventory data
   const inventoryItems: InventoryItem[] = [
     {
       id: "MED-001",
@@ -216,7 +217,6 @@ const Inventory: React.FC = () => {
     }
   ];
   
-  // Filter inventory items based on search term and active tab
   const filteredItems = inventoryItems.filter((item) => {
     const matchesSearch = 
       item.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -235,7 +235,6 @@ const Inventory: React.FC = () => {
     return matchesSearch && matchesTab;
   });
   
-  // Status badge component
   const StatusBadge = ({ status }: { status: StockStatus }) => {
     switch (status) {
       case 'in-stock':
@@ -251,7 +250,6 @@ const Inventory: React.FC = () => {
     }
   };
   
-  // Category badge component
   const CategoryBadge = ({ category }: { category: ItemCategory }) => {
     switch (category) {
       case 'medication':
@@ -267,7 +265,6 @@ const Inventory: React.FC = () => {
     }
   };
   
-  // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -275,13 +272,11 @@ const Inventory: React.FC = () => {
     }).format(amount);
   };
   
-  // Format date
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
   
-  // Handle restock item
   const handleRestock = () => {
     if (selectedItem && restockQuantity > 0) {
       toast({
@@ -294,7 +289,6 @@ const Inventory: React.FC = () => {
     }
   };
   
-  // Handle order item
   const handleOrderItem = () => {
     if (selectedItem) {
       toast({
@@ -306,7 +300,6 @@ const Inventory: React.FC = () => {
     }
   };
   
-  // Handle add new item
   const handleAddItem = () => {
     toast({
       title: "Item Added",
@@ -660,7 +653,5 @@ const Inventory: React.FC = () => {
     </div>
   );
 };
-
-const navigate = () => {};
 
 export default Inventory;
