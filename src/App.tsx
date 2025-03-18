@@ -21,8 +21,9 @@ import GetPrediction from "./pages/GetPrediction";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import SplashScreen from "./components/SplashScreen";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
+// Create Query Client with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -52,6 +53,13 @@ const AppWithSplash = () => {
   );
 };
 
+// Page transition variants
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 }
+};
+
 // Animated routes component
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -60,9 +68,10 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={pageVariants}
         transition={{ duration: 0.3 }}
       >
         <Routes location={location}>

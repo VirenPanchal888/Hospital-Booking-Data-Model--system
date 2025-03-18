@@ -30,7 +30,7 @@ const Layout: React.FC = () => {
   // Close sidebar on route change for mobile
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 1024) {
         setSidebarOpen(true);
       } else {
         setSidebarOpen(false);
@@ -49,7 +49,7 @@ const Layout: React.FC = () => {
   
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <motion.div 
           className="flex flex-col items-center gap-4"
           initial={{ opacity: 0 }}
@@ -67,15 +67,15 @@ const Layout: React.FC = () => {
     <div className="flex min-h-screen flex-col bg-background transition-colors duration-300">
       <Header toggleSidebar={toggleSidebar} />
       
-      <div className="flex flex-1">
+      <div className="flex flex-1 pt-16">
         <AnimatePresence mode="wait">
           {sidebarOpen && (
             <motion.div
-              initial={{ x: -240, opacity: 0 }}
+              initial={{ x: -280, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -240, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-y-0 left-0 z-20 w-64 md:relative"
+              exit={{ x: -280, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="fixed inset-y-0 left-0 z-20 mt-16 w-64 lg:relative"
             >
               <Sidebar isOpen={sidebarOpen} userRole={user?.role} />
             </motion.div>
@@ -85,13 +85,13 @@ const Layout: React.FC = () => {
         <motion.main 
           className={cn(
             "flex-1 transition-all duration-300 ease-in-out",
-            sidebarOpen ? "md:ml-64" : ""
+            sidebarOpen ? "lg:pl-64" : ""
           )}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="container mx-auto p-4 md:p-6 lg:p-8">
+          <div className="container mx-auto p-6">
             <Outlet />
           </div>
         </motion.main>
@@ -101,7 +101,7 @@ const Layout: React.FC = () => {
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div 
-            className="fixed inset-0 z-10 bg-background/80 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-10 bg-background/80 backdrop-blur-sm lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
