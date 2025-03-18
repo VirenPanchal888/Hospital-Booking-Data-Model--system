@@ -1,426 +1,388 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
-import { motion } from 'framer-motion';
-import { FileUpIcon, FilePdfIcon, ImageIcon, DownloadIcon, BookIcon, PulseIcon, BarChartIcon, Brain, HeartPulse, ArrowRight, Loader2 } from 'lucide-react';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileIcon, Upload, Plus, FileText, Activity } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "@/components/ui/use-toast";
+import { motion } from "framer-motion";
 
-const GetPrediction: React.FC = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+const GetPrediction = () => {
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [activeTab, setActiveTab] = useState('upload');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [analysisResults, setAnalysisResults] = useState({
-    diabetesRisk: 65,
-    cholesterolLevel: 'Borderline High',
-    bloodPressure: '135/85',
-    heartDiseaseRisk: 'Moderate',
-    bmi: 26.4,
-    anemia: 'Negative',
-    liverFunction: 'Normal',
-    kidneyFunction: 'Normal'
-  });
+  const [progress, setProgress] = useState(0);
+  const [result, setResult] = useState<any>(null);
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-    
-    setFile(selectedFile);
-    
-    // Create a preview if it's an image
-    if (selectedFile.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setFilePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
-    } else if (selectedFile.type === 'application/pdf') {
-      // For PDFs just show an icon
-      setFilePreview(null);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const newFiles = Array.from(event.target.files);
+      setUploadedFiles([...uploadedFiles, ...newFiles]);
+      
+      toast({
+        title: "Files uploaded successfully",
+        description: `${newFiles.length} file(s) have been added`,
+      });
     }
-    
-    toast({
-      title: "File uploaded successfully",
-      description: `"${selectedFile.name}" is ready for analysis.`,
-    });
   };
   
-  const analyzeReport = () => {
-    if (!file) {
+  const removeFile = (index: number) => {
+    const newFiles = [...uploadedFiles];
+    newFiles.splice(index, 1);
+    setUploadedFiles(newFiles);
+  };
+  
+  const analyzeReports = () => {
+    if (uploadedFiles.length === 0) {
       toast({
-        title: "No file selected",
-        description: "Please upload a medical report first.",
+        title: "No files to analyze",
+        description: "Please upload at least one medical report.",
         variant: "destructive",
       });
       return;
     }
     
     setIsAnalyzing(true);
-    setUploadProgress(0);
+    setProgress(0);
     
-    // Simulate upload progress
+    // Simulate analysis progress
     const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
+      setProgress((prevProgress) => {
+        const newProgress = prevProgress + 5;
+        if (newProgress >= 100) {
           clearInterval(interval);
           setTimeout(() => {
             setIsAnalyzing(false);
-            setShowResults(true);
-            setActiveTab('results');
+            setResult(mockPredictionResult);
+            toast({
+              title: "Analysis complete",
+              description: "Your medical reports have been analyzed successfully.",
+            });
           }, 500);
           return 100;
         }
-        return prev + 5;
+        return newProgress;
       });
-    }, 150);
+    }, 200);
   };
   
-  const downloadReport = () => {
-    toast({
-      title: "Report downloaded",
-      description: "Your AI-generated medical analysis has been downloaded.",
-    });
+  // Mocked prediction result
+  const mockPredictionResult = {
+    riskLevel: "Moderate",
+    conditions: [
+      { name: "Type 2 Diabetes", probability: 0.72, severity: "Moderate" },
+      { name: "Hypertension", probability: 0.63, severity: "Mild" },
+      { name: "Hyperlipidemia", probability: 0.58, severity: "Moderate" }
+    ],
+    metrics: [
+      { name: "Blood Glucose", value: "148 mg/dL", normal: "70-99 mg/dL", status: "High" },
+      { name: "Blood Pressure", value: "135/88 mmHg", normal: "120/80 mmHg", status: "Elevated" },
+      { name: "Cholesterol", value: "215 mg/dL", normal: "<200 mg/dL", status: "High" },
+      { name: "HDL", value: "42 mg/dL", normal: ">40 mg/dL", status: "Normal" },
+      { name: "LDL", value: "140 mg/dL", normal: "<100 mg/dL", status: "High" }
+    ],
+    recommendations: [
+      "Schedule an appointment with an endocrinologist to discuss diabetes management",
+      "Consider dietary changes to reduce cholesterol intake",
+      "Implement regular blood glucose monitoring",
+      "Increase physical activity to at least 150 minutes per week",
+      "Follow-up with primary care physician within 2 weeks"
+    ]
   };
   
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="mb-6"
-      >
-        <h1 className="text-3xl font-bold tracking-tight mb-2">AI Medical Report Analysis</h1>
+    <div className="container mx-auto py-6 space-y-8">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold">AI Health Prediction</h1>
         <p className="text-muted-foreground">
-          Upload your medical reports and get AI-powered health predictions and recommendations
+          Upload medical reports and get AI-powered health predictions and recommendations
         </p>
-      </motion.div>
+      </div>
       
-      <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="upload" disabled={isAnalyzing}>
-            <FileUpIcon className="mr-2 h-4 w-4" />
-            Upload Report
-          </TabsTrigger>
-          <TabsTrigger value="results" disabled={!showResults}>
-            <PulseIcon className="mr-2 h-4 w-4" />
-            Analysis Results
-          </TabsTrigger>
-          <TabsTrigger value="recommendations" disabled={!showResults}>
-            <HeartPulse className="mr-2 h-4 w-4" />
-            Recommendations
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="upload" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Medical Report</CardTitle>
-              <CardDescription>
-                Upload your medical report as image, PDF, or scanned document
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-10 text-center">
-                <Input
-                  type="file"
-                  id="report-upload"
-                  className="hidden"
-                  accept="image/*,.pdf"
-                  onChange={handleFileChange}
-                />
-                <Label htmlFor="report-upload" className="cursor-pointer">
-                  <div className="flex flex-col items-center justify-center gap-4">
-                    {filePreview ? (
-                      <div className="w-full max-w-md overflow-hidden rounded-lg">
-                        <img src={filePreview} alt="Report preview" className="max-w-full h-auto" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Upload Reports</CardTitle>
+            <CardDescription>
+              Upload medical reports, lab tests, or prescriptions for AI analysis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-primary/20 rounded-lg p-8 hover:bg-primary/5 transition-colors cursor-pointer">
+              <input
+                type="file"
+                id="file-upload"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Label htmlFor="file-upload" className="cursor-pointer">
+                <div className="flex flex-col items-center space-y-2">
+                  <Upload className="h-10 w-10 text-primary/60" />
+                  <span className="text-sm font-medium">
+                    Drag & drop files or click to browse
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Supports PDF, JPG, JPEG, PNG (max 10MB)
+                  </span>
+                </div>
+              </Label>
+            </div>
+            
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Uploaded Files ({uploadedFiles.length})</h3>
+                <div className="max-h-48 overflow-y-auto space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-secondary p-2 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <FileIcon className="h-4 w-4" />
+                        <span className="text-sm truncate max-w-[180px]">{file.name}</span>
                       </div>
-                    ) : file ? (
-                      <FilePdfIcon className="h-16 w-16 text-primary" />
-                    ) : (
-                      <>
-                        <FileUpIcon className="h-12 w-12 text-gray-400" />
-                        <div className="space-y-2">
-                          <p className="text-lg font-medium">Drag and drop or click to upload</p>
-                          <p className="text-sm text-muted-foreground">
-                            Support for JPG, PNG, and PDF files
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Label>
-              </div>
-              
-              {file && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {file.type.startsWith('image/') ? (
-                        <ImageIcon className="h-8 w-8 text-primary" />
-                      ) : (
-                        <FilePdfIcon className="h-8 w-8 text-primary" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => removeFile(index)}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="h-4 w-4"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </Button>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button 
+              onClick={analyzeReports} 
+              className="w-full"
+              disabled={isAnalyzing || uploadedFiles.length === 0}
+            >
+              {isAnalyzing ? "Analyzing..." : "Analyze Reports"}
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        <Card className="md:col-span-2">
+          {isAnalyzing ? (
+            <CardContent className="flex flex-col items-center justify-center space-y-4 min-h-[400px]">
+              <div className="w-40 h-40 relative flex items-center justify-center">
+                <svg
+                  className="animate-spin absolute"
+                  width="160"
+                  height="160"
+                  viewBox="0 0 160 160"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="74"
+                    stroke="currentColor"
+                    strokeOpacity="0.1"
+                    strokeWidth="12"
+                  />
+                  <path
+                    d="M154 80C154 120.869 120.869 154 80 154"
+                    stroke="currentColor"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="text-2xl font-bold">{progress}%</span>
+              </div>
+              <div className="w-full max-w-md space-y-2">
+                <Progress value={progress} />
+                <p className="text-center text-sm text-muted-foreground">
+                  {progress < 30
+                    ? "Extracting data from medical reports..."
+                    : progress < 60
+                    ? "Processing medical data..."
+                    : progress < 90
+                    ? "Running AI predictions..."
+                    : "Finalizing health assessment..."}
+                </p>
+              </div>
+            </CardContent>
+          ) : result ? (
+            <Tabs defaultValue="overview" className="w-full">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Health Prediction Results</CardTitle>
+                  <TabsList>
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="metrics">Health Metrics</TabsTrigger>
+                    <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                  </TabsList>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <TabsContent value="overview" className="space-y-6 mt-0">
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10">
+                    <div>
+                      <h3 className="font-medium">Overall Health Risk</h3>
+                      <p className="text-2xl font-bold text-primary">{result.riskLevel}</p>
+                    </div>
+                    <Activity className="h-12 w-12 text-primary" />
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-3">Potential Health Conditions</h3>
+                    <div className="space-y-3">
+                      {result.conditions.map((condition: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-center justify-between p-3 rounded-lg border"
+                        >
+                          <div>
+                            <p className="font-medium">{condition.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Severity: {condition.severity}
+                            </p>
+                          </div>
+                          <div className="w-14 h-14 rounded-full border-4 border-primary/20 flex items-center justify-center">
+                            <span className="text-lg font-bold">
+                              {Math.round(condition.probability * 100)}%
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="metrics" className="mt-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium mb-2">Health Metrics Analysis</h3>
+                    <div className="grid gap-3">
+                      {result.metrics.map((metric: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={`p-3 rounded-lg border ${
+                            metric.status === "High" 
+                              ? "bg-red-50 border-red-200" 
+                              : metric.status === "Elevated" 
+                              ? "bg-amber-50 border-amber-200" 
+                              : "bg-green-50 border-green-200"
+                          }`}
+                        >
+                          <div className="flex justify-between">
+                            <p className="font-medium">{metric.name}</p>
+                            <p className={`text-sm font-medium ${
+                              metric.status === "High" 
+                                ? "text-red-600" 
+                                : metric.status === "Elevated" 
+                                ? "text-amber-600" 
+                                : "text-green-600"
+                            }`}>
+                              {metric.status}
+                            </p>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <p className="text-lg font-bold">{metric.value}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Normal: {metric.normal}
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="recommendations" className="mt-0">
+                  <div className="space-y-4">
+                    <h3 className="font-medium mb-2">Health Recommendations</h3>
+                    <ul className="space-y-2">
+                      {result.recommendations.map((recommendation: string, index: number) => (
+                        <motion.li
+                          key={index}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex items-start gap-2 p-3 rounded-lg border"
+                        >
+                          <div className="mt-0.5 min-w-4 text-primary">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="9 11 12 14 22 4"></polyline>
+                              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                          </div>
+                          <span>{recommendation}</span>
+                        </motion.li>
+                      ))}
+                    </ul>
                     
-                    <Button variant="outline" size="sm" onClick={() => {
-                      setFile(null);
-                      setFilePreview(null);
-                    }}>
-                      Remove
+                    <Button className="w-full mt-4">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Download Full Report
                     </Button>
                   </div>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={analyzeReport} 
-                disabled={!file || isAnalyzing}
-                className="w-full"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing Report ({uploadProgress}%)
-                  </>
-                ) : (
-                  <>
-                    <Brain className="mr-2 h-4 w-4" />
-                    Analyze Report
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          {isAnalyzing && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Analysis Progress</CardTitle>
-                <CardDescription>
-                  Our AI is processing your report
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Progress value={uploadProgress} className="h-2" />
-                
-                <div className="space-y-2">
-                  {uploadProgress > 20 && (
-                    <p className="text-sm flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Extracting text from document
-                    </p>
-                  )}
-                  {uploadProgress > 40 && (
-                    <p className="text-sm flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Identifying medical terms and values
-                    </p>
-                  )}
-                  {uploadProgress > 60 && (
-                    <p className="text-sm flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Comparing with medical standards
-                    </p>
-                  )}
-                  {uploadProgress > 80 && (
-                    <p className="text-sm flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Generating health predictions
-                    </p>
-                  )}
-                  {uploadProgress >= 100 && (
-                    <p className="text-sm flex items-center gap-2">
-                      <span className="text-green-500">✓</span> Creating personalized recommendations
-                    </p>
-                  )}
-                </div>
+                </TabsContent>
               </CardContent>
-            </Card>
+            </Tabs>
+          ) : (
+            <div className="flex flex-col items-center justify-center space-y-4 p-8 min-h-[400px] text-center">
+              <div className="p-4 rounded-full bg-primary/10 text-primary">
+                <Activity className="h-10 w-10" />
+              </div>
+              <h3 className="text-xl font-medium">AI Health Analysis</h3>
+              <p className="text-muted-foreground max-w-md">
+                Upload your medical reports and our AI will analyze them to predict potential
+                health conditions and provide personalized recommendations.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById("file-upload")?.click()}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Upload Reports
+              </Button>
+            </div>
           )}
-        </TabsContent>
-        
-        <TabsContent value="results" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Health Analysis Results</CardTitle>
-              <CardDescription>
-                AI-generated analysis of your medical report
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Key Health Metrics</h3>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <Label>Diabetes Risk</Label>
-                        <span className="text-amber-500 font-medium">Moderate Risk</span>
-                      </div>
-                      <Progress value={analysisResults.diabetesRisk} className="h-2" />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <Label>Cholesterol</Label>
-                        <span className="text-amber-500 font-medium">{analysisResults.cholesterolLevel}</span>
-                      </div>
-                      <Progress value={70} className="h-2" />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <Label>Blood Pressure</Label>
-                        <span className="text-amber-500 font-medium">{analysisResults.bloodPressure}</span>
-                      </div>
-                      <Progress value={60} className="h-2" />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1">
-                        <Label>Heart Disease Risk</Label>
-                        <span className="text-amber-500 font-medium">{analysisResults.heartDiseaseRisk}</span>
-                      </div>
-                      <Progress value={50} className="h-2" />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Additional Findings</h3>
-                  
-                  <div className="bg-muted p-4 rounded-lg space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">BMI</span>
-                      <span className="text-sm font-medium">{analysisResults.bmi} (Overweight)</span>
-                    </div>
-                    <Separator />
-                    
-                    <div className="flex justify-between">
-                      <span className="text-sm">Anemia</span>
-                      <span className="text-sm font-medium text-green-500">{analysisResults.anemia}</span>
-                    </div>
-                    <Separator />
-                    
-                    <div className="flex justify-between">
-                      <span className="text-sm">Liver Function</span>
-                      <span className="text-sm font-medium text-green-500">{analysisResults.liverFunction}</span>
-                    </div>
-                    <Separator />
-                    
-                    <div className="flex justify-between">
-                      <span className="text-sm">Kidney Function</span>
-                      <span className="text-sm font-medium text-green-500">{analysisResults.kidneyFunction}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
-                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-400 mb-2">
-                      Potential Concerns Detected
-                    </h4>
-                    <ul className="text-sm space-y-1 text-amber-700 dark:text-amber-300">
-                      <li>• Elevated blood glucose levels</li>
-                      <li>• Borderline high blood pressure</li>
-                      <li>• Higher than optimal cholesterol levels</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <div className="flex justify-end">
-            <Button onClick={() => setActiveTab('recommendations')}>
-              View Recommendations <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="recommendations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personalized Health Recommendations</CardTitle>
-              <CardDescription>
-                Based on the AI analysis of your medical report
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-6">
-                <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                    <HeartPulse className="h-5 w-5" />
-                    Medical Recommendations
-                  </h3>
-                  
-                  <ul className="space-y-2 pl-6 list-disc">
-                    <li>Schedule follow-up with endocrinologist to address elevated glucose levels</li>
-                    <li>Consider a lipid panel test in 3 months to monitor cholesterol levels</li>
-                    <li>Regular blood pressure monitoring twice weekly is advised</li>
-                    <li>Discuss with your physician about potential medication adjustments</li>
-                  </ul>
-                </div>
-                
-                <div className="p-4 rounded-lg border border-green-500/20 bg-green-500/5">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                    <BarChartIcon className="h-5 w-5 text-green-500" />
-                    Lifestyle Adjustments
-                  </h3>
-                  
-                  <ul className="space-y-2 pl-6 list-disc">
-                    <li>Reduce daily carbohydrate intake to 150g or less</li>
-                    <li>Implement 30 minutes of moderate exercise at least 5 days a week</li>
-                    <li>Increase dietary fiber intake to 25-30g daily</li>
-                    <li>Reduce sodium intake to under 2,300mg per day</li>
-                    <li>Consider the DASH diet to help manage blood pressure</li>
-                  </ul>
-                </div>
-                
-                <div className="p-4 rounded-lg border border-blue-500/20 bg-blue-500/5">
-                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                    <BookIcon className="h-5 w-5 text-blue-500" />
-                    Educational Resources
-                  </h3>
-                  
-                  <ul className="space-y-2 pl-6 list-disc">
-                    <li>Visit the American Diabetes Association website for pre-diabetes management</li>
-                    <li>Download the "Heart Health" app for blood pressure tracking</li>
-                    <li>Join our hospital's free webinar on cholesterol management</li>
-                    <li>Read "The DASH Diet Action Plan" for dietary guidance</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={downloadReport}>
-                <DownloadIcon className="mr-2 h-4 w-4" />
-                Download Full Report
-              </Button>
-              
-              <Button onClick={() => {
-                toast({
-                  title: "Appointment Recommended",
-                  description: "Based on your results, we recommend booking an appointment with a specialist.",
-                });
-              }}>
-                Book Appointment with Specialist
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </Card>
+      </div>
     </div>
   );
 };

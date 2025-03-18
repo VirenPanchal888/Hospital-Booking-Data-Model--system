@@ -6,6 +6,7 @@ import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -112,8 +113,5 @@ const Layout: React.FC = () => {
     </div>
   );
 };
-
-// Add missing import
-import { cn } from '@/lib/utils';
 
 export default Layout;
