@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,6 +66,88 @@ const Inventory: React.FC = () => {
   const [showAddItemDialog, setShowAddItemDialog] = useState(false);
   const [restockQuantity, setRestockQuantity] = useState(0);
   
+  // Status badge component
+  const StatusBadge = ({ status }: { status: StockStatus }) => {
+    switch (status) {
+      case 'in-stock':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">In Stock</Badge>;
+      case 'low-stock':
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Low Stock</Badge>;
+      case 'out-of-stock':
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Out of Stock</Badge>;
+      case 'on-order':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">On Order</Badge>;
+      default:
+        return null;
+    }
+  };
+  
+  // Category badge component
+  const CategoryBadge = ({ category }: { category: ItemCategory }) => {
+    switch (category) {
+      case 'medication':
+        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Medication</Badge>;
+      case 'supplies':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Supplies</Badge>;
+      case 'equipment':
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Equipment</Badge>;
+      case 'lab':
+        return <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200">Lab</Badge>;
+      default:
+        return null;
+    }
+  };
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+  
+  // Format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+  
+  // Handle restock item
+  const handleRestock = () => {
+    if (selectedItem && restockQuantity > 0) {
+      toast({
+        title: "Item Restocked",
+        description: `Added ${restockQuantity} ${selectedItem.unit}(s) of ${selectedItem.name} to inventory.`,
+      });
+      
+      setSelectedItem(null);
+      setRestockQuantity(0);
+    }
+  };
+  
+  // Handle order item
+  const handleOrderItem = () => {
+    if (selectedItem) {
+      toast({
+        title: "Order Placed",
+        description: `An order has been placed for ${selectedItem.name}.`,
+      });
+      
+      setSelectedItem(null);
+    }
+  };
+  
+  // Handle add new item
+  const handleAddItem = () => {
+    toast({
+      title: "Item Added",
+      description: "New item has been added to inventory.",
+    });
+    
+    setShowAddItemDialog(false);
+  };
+  
+  // Mock inventory data
   const inventoryItems: InventoryItem[] = [
     {
       id: "MED-001",
@@ -217,6 +298,7 @@ const Inventory: React.FC = () => {
     }
   ];
   
+  // Filter inventory items based on search term and active tab
   const filteredItems = inventoryItems.filter((item) => {
     const matchesSearch = 
       item.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -234,80 +316,6 @@ const Inventory: React.FC = () => {
     
     return matchesSearch && matchesTab;
   });
-  
-  const StatusBadge = ({ status }: { status: StockStatus }) => {
-    switch (status) {
-      case 'in-stock':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">In Stock</Badge>;
-      case 'low-stock':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Low Stock</Badge>;
-      case 'out-of-stock':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Out of Stock</Badge>;
-      case 'on-order':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">On Order</Badge>;
-      default:
-        return null;
-    }
-  };
-  
-  const CategoryBadge = ({ category }: { category: ItemCategory }) => {
-    switch (category) {
-      case 'medication':
-        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Medication</Badge>;
-      case 'supplies':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Supplies</Badge>;
-      case 'equipment':
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">Equipment</Badge>;
-      case 'lab':
-        return <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200">Lab</Badge>;
-      default:
-        return null;
-    }
-  };
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-  
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
-  };
-  
-  const handleRestock = () => {
-    if (selectedItem && restockQuantity > 0) {
-      toast({
-        title: "Item Restocked",
-        description: `Added ${restockQuantity} ${selectedItem.unit}(s) of ${selectedItem.name} to inventory.`,
-      });
-      
-      setSelectedItem(null);
-      setRestockQuantity(0);
-    }
-  };
-  
-  const handleOrderItem = () => {
-    if (selectedItem) {
-      toast({
-        title: "Order Placed",
-        description: `An order has been placed for ${selectedItem.name}.`,
-      });
-      
-      setSelectedItem(null);
-    }
-  };
-  
-  const handleAddItem = () => {
-    toast({
-      title: "Item Added",
-      description: "New item has been added to inventory.",
-    });
-    
-    setShowAddItemDialog(false);
-  };
   
   return (
     <div className="space-y-8">

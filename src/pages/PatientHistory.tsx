@@ -10,48 +10,21 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDatabase } from '@/contexts/DatabaseContext';
 import { Calendar, FileText, Clipboard, Pill, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import type { Appointment, Medication, LabTest } from '@/contexts/DatabaseContext';
 
-// Define specific types for each entity
-interface Appointment {
-  id: string;
-  date: string;
-  time: string;
-  doctorName: string;
-  department: string;
-  status: string;
-  reason: string;
-  notes?: string;
+// Define specific types for the Timeline events, ensuring compatibility with DatabaseContext types
+interface LocalAppointment extends Omit<Appointment, 'department'> {
+  department: string;  // Make department required for our UI display
 }
 
-interface Medication {
-  id: string;
-  name: string;
-  dosage: string;
-  frequency: string;
-  startDate: string;
-  endDate: string | null;
-  prescribedBy: string;
-  status: string;
-  notes?: string;
-  refills?: number;
-}
+interface LocalMedication extends Medication {}
 
-interface LabTest {
-  id: string;
-  testName: string;
-  testType: string;
-  date: string;
-  resultDate: string | null;
-  orderedBy: string;
-  status: string;
-  result?: string;
-  notes?: string;
-}
+interface LocalLabTest extends LabTest {}
 
 type TimelineEvent = {
   type: 'appointment' | 'medication' | 'labTest';
   date: string;
-  data: Appointment | Medication | LabTest;
+  data: LocalAppointment | LocalMedication | LocalLabTest;
 };
 
 const PatientHistory: React.FC = () => {
@@ -91,17 +64,23 @@ const PatientHistory: React.FC = () => {
   };
   
   // Type guards for determining event types
-  const isAppointment = (event: TimelineEvent['data']): event is Appointment => {
+  const isAppointment = (event: TimelineEvent['data']): event is LocalAppointment => {
     return 'reason' in event && 'doctorName' in event;
   };
   
-  const isMedication = (event: TimelineEvent['data']): event is Medication => {
+  const isMedication = (event: TimelineEvent['data']): event is LocalMedication => {
     return 'name' in event && 'dosage' in event && 'frequency' in event;
   };
   
-  const isLabTest = (event: TimelineEvent['data']): event is LabTest => {
+  const isLabTest = (event: TimelineEvent['data']): event is LocalLabTest => {
     return 'testName' in event && 'testType' in event;
   };
+
+  // Prepare appointments with guaranteed department field
+  const localAppointments: LocalAppointment[] = appointments.map(appointment => ({
+    ...appointment,
+    department: appointment.department || 'Unknown'
+  }));
   
   return (
     <motion.div
@@ -142,7 +121,7 @@ const PatientHistory: React.FC = () => {
                 <div className="relative pl-8 border-l-2 border-border">
                   {/* Combine all events and sort by date */}
                   {[
-                    ...appointments.map(a => ({
+                    ...localAppointments.map(a => ({
                       type: 'appointment' as const,
                       date: a.date,
                       data: a
@@ -293,7 +272,7 @@ const PatientHistory: React.FC = () => {
                                   {formatDate(appointment.date)} at {appointment.time}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {appointment.doctorName} • {appointment.department}
+                                  {appointment.doctorName} • {appointment.department || 'General'}
                                 </p>
                                 <p className="text-sm mt-1">
                                   <span className="capitalize px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800">
