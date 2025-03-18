@@ -6,7 +6,8 @@ import {
   Receipt, FileText, PillIcon, BarChart3, Ambulance,
   LogOut, Brain, Settings, Moon, Sun, ThermometerIcon,
   Database, TestTube, ClipboardList, Stethoscope, UserPlus,
-  HeartPulse, List, Activity, ScrollText, Building2
+  HeartPulse, List, Activity, ScrollText, Building2,
+  BookOpen, Route
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
@@ -170,6 +171,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             />
           )}
           
+          {showLink(['admin', 'doctor', 'nurse']) && (
+            <SidebarLink 
+              href="/clinical-pathways"
+              icon={<Route className="h-4 w-4" />}
+              label="Clinical Pathways"
+              isActive={isActive('/clinical-pathways')}
+            />
+          )}
+          
           {showLink(['admin', 'patient']) && (
             <SidebarLink 
               href="/doctors"
@@ -250,6 +260,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, userRole = 'admin' }) => {
             icon={<PillIcon className="h-4 w-4" />}
             label="Pharmacy"
             isActive={isActive('/pharmacy')}
+          />
+          
+          <SidebarLink 
+            href="/medical-library"
+            icon={<BookOpen className="h-4 w-4" />}
+            label="Medical Library"
+            isActive={isActive('/medical-library')}
           />
           
           {showLink(['admin', 'doctor', 'executive']) && (
